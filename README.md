@@ -77,4 +77,4 @@ docs/metrics.md    검증 결과 (python -m cxpe.metrics)
 
 ## 라이선스
 
-Apache-2.0. 제3자 구성요소와 선행 프로젝트 크레딧은 NOTICE에 있다.
+Apache-2.0. 제3자 구성요소는 NOTICE에 있다.
