@@ -35,7 +35,8 @@ class _ExpTrack:
     confirmed_at: Optional[float] = None
     first_met_at: Optional[float] = None
     exceeded_t0: Optional[float] = None   # FAIL 시점의 마감(deadline)
-    exceeded_t1: Optional[float] = None   # 실제 성립 시각
+    exceeded_t1: Optional[float] = None   # 실제 성립(hold 유지 시작) 시각
+    post_met_since: Optional[float] = None
 
 
 @dataclass
@@ -224,15 +225,12 @@ class RunEngine:
             fail_deadline = rt.t_run_start + exp.within_sec + exp.hold_sec
             if t > fail_deadline:
                 tr.exceeded_t0 = rt.t_run_start + exp.within_sec
-                if tr.first_met_at is not None and tr.met_since is not None:
-                    tr.exceeded_t1 = t  # 이미 성립 중이었으나 hold 미완 → 여기서 닫는다
                 code = timeout_code_for(exp.tag)
                 ev = Evidence(tag=exp.tag, t=t, value=rt.last_values.get(exp.tag), threshold=exp.threshold_text(),
                               deadline=rt.t_run_start + exp.within_sec, elapsed_sec=t - rt.t_run_start,
-                              extra={"within_sec": exp.within_sec, "hold_sec": exp.hold_sec, "met_t": tr.exceeded_t1})
+                              extra={"within_sec": exp.within_sec, "hold_sec": exp.hold_sec, "met_t": None})
                 e = self._finish_step(rt, StepState.FAIL, t, [code], ev, t0_perf)
-                if tr.exceeded_t1 is not None:
-                    self.segments.append(Segment(step_id=step.id, kind="exceeded", t0=tr.exceeded_t0, t1=tr.exceeded_t1))
+                self._track_exceeded(sample, t)  # 현재 샘플부터 실제 성립 시각 추적
                 return [e]
         return []
 
@@ -246,13 +244,19 @@ class RunEngine:
                 if tr.exceeded_t0 is None or tr.exceeded_t1 is not None:
                     continue
                 if exp.evaluate(self._val(sample, exp.tag)) is True:
-                    tr.exceeded_t1 = t
-                    self.segments.append(Segment(step_id=rt.step.id, kind="exceeded", t0=tr.exceeded_t0, t1=t))
-                    rt.evidence.extra["met_t"] = t
-                    for v in self.verdicts:
-                        if v.step_id == rt.step.id and v.state == StepState.FAIL:
-                            v.evidence.extra["met_t"] = t
-                            v.reason_ko = " / ".join(render_ko(c, v.evidence) for c in v.reason_codes)
+                    if tr.post_met_since is None:
+                        tr.post_met_since = t
+                    if t - tr.post_met_since >= exp.hold_sec:
+                        met_t = tr.post_met_since
+                        tr.exceeded_t1 = met_t
+                        self.segments.append(Segment(step_id=rt.step.id, kind="exceeded", t0=tr.exceeded_t0, t1=met_t))
+                        rt.evidence.extra["met_t"] = met_t
+                        for v in self.verdicts:
+                            if v.step_id == rt.step.id and v.state == StepState.FAIL:
+                                v.evidence.extra["met_t"] = met_t
+                                v.reason_ko = " / ".join(render_ko(c, v.evidence) for c in v.reason_codes)
+                else:
+                    tr.post_met_since = None
 
     def finish(self) -> list[Verdict]:
         """스트림 종료. 미완 단계는 FAIL, 열린 exceeded 구간은 종료 시각으로 닫는다."""
