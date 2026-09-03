@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Cx-Preflight Edge · 히스토리</title>
+  <link rel="stylesheet" href="/static/uplot.min.css" />
+  <link rel="stylesheet" href="/static/style.css?v=1" />
+</head>
+<body>
+  <header>
+    <span class="title">Cx-Preflight Edge</span>
+    <span class="sub">세션 히스토리 (보드 로컬 저장)</span>
+    <a class="nav" href="/">라이브</a>
+  </header>
+  <main style="grid-template-columns: 1fr;">
+    <div class="card"><div class="card-head"><span>세션 목록</span><span id="count" class="small dim"></span></div><div id="list" class="grid-sessions"></div></div>
+    <div class="card" id="detail" hidden>
+      <div class="card-head"><span id="d-title">세션</span><button id="d-del" class="link">삭제</button></div>
+      <div id="d-meta" class="small dim mono"></div>
+      <div id="d-chart" style="height: 260px; margin: 8px 0;"></div>
+      <div class="table-wrap"><table id="d-table"><thead><tr><th>단계</th><th>판정</th><th>시작</th><th>종료</th><th>사유</th><th>지연(ms)</th></tr></thead><tbody></tbody></table></div>
+      <pre id="d-report" class="doc" style="max-height: 400px; margin-top: 8px;"></pre>
+    </div>
+  </main>
+  <script src="/static/uplot.min.js"></script>
+  <script src="/static/history.js?v=1"></script>
+</body>
+</html>
