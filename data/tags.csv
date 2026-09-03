@@ -1,0 +1,13 @@
+tag,equipment,description,unit,kind
+CH1_STATUS,CH-1,냉동기 1 운전상태,,bool
+CH1_TRIP,CH-1,냉동기 1 트립 알람,,bool
+CH1_CMD,CH-1,냉동기 1 운전 지령,,bool
+CH2_STATUS,CH-2,냉동기 2 운전상태,,bool
+CH2_TRIP,CH-2,냉동기 2 트립 알람,,bool
+CH2_CMD,CH-2,냉동기 2 운전 지령,,bool
+CHWP2_STATUS,CHWP-2,냉수펌프 2 운전상태,,bool
+CHWP2_CMD,CHWP-2,냉수펌프 2 운전 지령,,bool
+CHWS_T_SUP,TT-CHWS-01,냉수 공급온도,degC,float
+CHWR_T_RET,TT-CHWR-01,냉수 환수온도,degC,float
+CHW_FLOW,FT-CHW-01,냉수 유량,m3/h,float
+LOAD_KW,LB-01,부하기 출력,kW,float

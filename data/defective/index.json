@@ -1,0 +1,88 @@
+{
+  "pf01_s3_no_precond": {
+    "file": "pf01_s3_no_precond.json",
+    "expected_codes": [
+      "PF01_MISSING_PRECONDITION"
+    ],
+    "note": "S3 사전조건 삭제"
+  },
+  "pf01_s5_no_precond": {
+    "file": "pf01_s5_no_precond.json",
+    "expected_codes": [
+      "PF01_MISSING_PRECONDITION"
+    ],
+    "note": "S5 사전조건 삭제"
+  },
+  "pf02_s5_before_s4": {
+    "file": "pf02_s5_before_s4.json",
+    "expected_codes": [
+      "PF02_ORDER_CONTRADICTION"
+    ],
+    "note": "S4·S5 순서 뒤바뀜: S5 사전조건 CH2_CMD=1이 뒤 단계에서만 성립"
+  },
+  "pf02_s7_precond_ch2_off": {
+    "file": "pf02_s7_precond_ch2_off.json",
+    "expected_codes": [
+      "PF02_ORDER_CONTRADICTION"
+    ],
+    "note": "S7 사전조건이 S5 결과(CH2 운전)와 모순, S8에서만 성립"
+  },
+  "pf03_s6_no_expected": {
+    "file": "pf03_s6_no_expected.json",
+    "expected_codes": [
+      "PF03_NO_EXPECTED_RESULT"
+    ],
+    "note": "S6 기대 결과 삭제"
+  },
+  "pf03_s4_no_expected": {
+    "file": "pf03_s4_no_expected.json",
+    "expected_codes": [
+      "PF03_NO_EXPECTED_RESULT"
+    ],
+    "note": "S4 기대 결과 삭제"
+  },
+  "pf04_s7_tag_renamed": {
+    "file": "pf04_s7_tag_renamed.json",
+    "expected_codes": [
+      "PF04_TAG_UNMAPPED"
+    ],
+    "note": "S7 기대 결과 태그가 태그리스트에 없음"
+  },
+  "pf04_s2_tag_typo": {
+    "file": "pf04_s2_tag_typo.json",
+    "expected_codes": [
+      "PF04_TAG_UNMAPPED"
+    ],
+    "note": "S2 태그 오타"
+  },
+  "pf05_s3_no_rollback": {
+    "file": "pf05_s3_no_rollback.json",
+    "expected_codes": [
+      "PF05_MISSING_ROLLBACK"
+    ],
+    "note": "S3 복구 절차 삭제"
+  },
+  "pf05_s2_no_rollback": {
+    "file": "pf05_s2_no_rollback.json",
+    "expected_codes": [
+      "PF05_MISSING_ROLLBACK"
+    ],
+    "note": "S2 복구 절차 삭제"
+  },
+  "pf06_s7_band_10_12": {
+    "file": "pf06_s7_band_10_12.json",
+    "expected_codes": [
+      "PF06_THRESHOLD_CONFLICT"
+    ],
+    "note": "S7 온도 기준 [10,12]가 S1 [6,8]과 서로소"
+  },
+  "mixed_demo": {
+    "file": "mixed_demo.json",
+    "expected_codes": [
+      "PF03_NO_EXPECTED_RESULT",
+      "PF04_TAG_UNMAPPED",
+      "PF05_MISSING_ROLLBACK"
+    ],
+    "note": "데모용 복합 결함: 태그 미매핑 + 기대 결과 누락 + 복구 누락"
+  }
+}

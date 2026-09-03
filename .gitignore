@@ -1,0 +1,14 @@
+.venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+*.egg-info/
+build/
+dist/
+sessions/*/
+!sessions/.gitkeep
+docs/recordings/
+*.mp4
+*.log
+.DS_Store
+Thumbs.db

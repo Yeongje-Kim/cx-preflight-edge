@@ -1,0 +1,88 @@
+{
+  "tags": [
+    {
+      "tag": "CH1_STATUS",
+      "equipment": "CH-1",
+      "description": "냉동기 1 운전상태",
+      "unit": "",
+      "kind": "bool"
+    },
+    {
+      "tag": "CH1_TRIP",
+      "equipment": "CH-1",
+      "description": "냉동기 1 트립 알람",
+      "unit": "",
+      "kind": "bool"
+    },
+    {
+      "tag": "CH1_CMD",
+      "equipment": "CH-1",
+      "description": "냉동기 1 운전 지령",
+      "unit": "",
+      "kind": "bool"
+    },
+    {
+      "tag": "CH2_STATUS",
+      "equipment": "CH-2",
+      "description": "냉동기 2 운전상태",
+      "unit": "",
+      "kind": "bool"
+    },
+    {
+      "tag": "CH2_TRIP",
+      "equipment": "CH-2",
+      "description": "냉동기 2 트립 알람",
+      "unit": "",
+      "kind": "bool"
+    },
+    {
+      "tag": "CH2_CMD",
+      "equipment": "CH-2",
+      "description": "냉동기 2 운전 지령",
+      "unit": "",
+      "kind": "bool"
+    },
+    {
+      "tag": "CHWP2_STATUS",
+      "equipment": "CHWP-2",
+      "description": "냉수펌프 2 운전상태",
+      "unit": "",
+      "kind": "bool"
+    },
+    {
+      "tag": "CHWP2_CMD",
+      "equipment": "CHWP-2",
+      "description": "냉수펌프 2 운전 지령",
+      "unit": "",
+      "kind": "bool"
+    },
+    {
+      "tag": "CHWS_T_SUP",
+      "equipment": "TT-CHWS-01",
+      "description": "냉수 공급온도",
+      "unit": "degC",
+      "kind": "float"
+    },
+    {
+      "tag": "CHWR_T_RET",
+      "equipment": "TT-CHWR-01",
+      "description": "냉수 환수온도",
+      "unit": "degC",
+      "kind": "float"
+    },
+    {
+      "tag": "CHW_FLOW",
+      "equipment": "FT-CHW-01",
+      "description": "냉수 유량",
+      "unit": "m3/h",
+      "kind": "float"
+    },
+    {
+      "tag": "LOAD_KW",
+      "equipment": "LB-01",
+      "description": "부하기 출력",
+      "unit": "kW",
+      "kind": "float"
+    }
+  ]
+}

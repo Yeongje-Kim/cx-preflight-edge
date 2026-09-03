@@ -1,0 +1,286 @@
+{
+  "plan_id": "IST-COOL-N1-01-DEF-pf04_s7_tag_renamed",
+  "title": "냉동기 N+1 자동 전환 시험 (냉수 계통)",
+  "equipment": [
+    "CH-1",
+    "CH-2",
+    "CHWP-2",
+    "TT-CHWS-01",
+    "LB-01"
+  ],
+  "tag_aliases": {},
+  "steps": [
+    {
+      "id": "S1",
+      "title": "초기 상태 확인",
+      "action": "시험 시작 전 설비 상태를 BMS 화면에서 확인한다.",
+      "preconditions": [
+        {
+          "tag": "CH1_STATUS",
+          "op": "==",
+          "value": 1
+        },
+        {
+          "tag": "CH2_STATUS",
+          "op": "==",
+          "value": 0
+        }
+      ],
+      "expected": [
+        {
+          "tag": "CHWS_T_SUP",
+          "op": "in_band",
+          "band": [
+            6,
+            8
+          ],
+          "within_sec": 20,
+          "hold_sec": 10
+        }
+      ],
+      "abort_conditions": [],
+      "rollback": [],
+      "changes_state": false
+    },
+    {
+      "id": "S2",
+      "title": "부하 안정 확인",
+      "action": "부하기 LB-01 출력을 200 kW로 유지한다.",
+      "preconditions": [
+        {
+          "tag": "LOAD_KW",
+          "op": ">",
+          "value": 0
+        }
+      ],
+      "expected": [
+        {
+          "tag": "LOAD_KW",
+          "op": ">=",
+          "value": 200,
+          "within_sec": 30,
+          "hold_sec": 10
+        }
+      ],
+      "abort_conditions": [],
+      "rollback": [
+        "부하기 출력을 0 kW로 하강"
+      ],
+      "changes_state": true
+    },
+    {
+      "id": "S3",
+      "title": "CH-1 모의 트립",
+      "action": "CH-1 트립 접점을 모의 입력한다.",
+      "preconditions": [
+        {
+          "tag": "CH1_STATUS",
+          "op": "==",
+          "value": 1
+        },
+        {
+          "tag": "CH2_STATUS",
+          "op": "==",
+          "value": 0
+        }
+      ],
+      "trigger": {
+        "tag": "CH1_TRIP",
+        "op": "==",
+        "value": 1
+      },
+      "expected": [
+        {
+          "tag": "CH1_STATUS",
+          "op": "==",
+          "value": 0,
+          "within_sec": 5,
+          "hold_sec": 0
+        }
+      ],
+      "abort_conditions": [
+        {
+          "tag": "CHWS_T_SUP",
+          "op": ">",
+          "value": 14
+        }
+      ],
+      "rollback": [
+        "트립 접점 복구",
+        "CH-1 재기동"
+      ],
+      "changes_state": true
+    },
+    {
+      "id": "S4",
+      "title": "대기기 기동 지령 확인",
+      "action": "BMS 자동 전환 로직의 기동 지령 출력을 확인한다.",
+      "preconditions": [
+        {
+          "tag": "CH1_TRIP",
+          "op": "==",
+          "value": 1
+        }
+      ],
+      "expected": [
+        {
+          "tag": "CH2_CMD",
+          "op": "==",
+          "value": 1,
+          "within_sec": 10,
+          "hold_sec": 0
+        }
+      ],
+      "abort_conditions": [
+        {
+          "tag": "CHWS_T_SUP",
+          "op": ">",
+          "value": 14
+        }
+      ],
+      "rollback": [
+        "자동 전환 로직 비활성",
+        "수동 운전 전환"
+      ],
+      "changes_state": false
+    },
+    {
+      "id": "S5",
+      "title": "CH-2 운전 확인",
+      "action": "CH-2 기동 및 운전 상태를 확인한다.",
+      "preconditions": [
+        {
+          "tag": "CH2_CMD",
+          "op": "==",
+          "value": 1
+        }
+      ],
+      "expected": [
+        {
+          "tag": "CH2_STATUS",
+          "op": "==",
+          "value": 1,
+          "within_sec": 30,
+          "hold_sec": 0
+        }
+      ],
+      "abort_conditions": [
+        {
+          "tag": "CHWS_T_SUP",
+          "op": ">",
+          "value": 14
+        }
+      ],
+      "rollback": [
+        "CH-2 수동 정지"
+      ],
+      "changes_state": true
+    },
+    {
+      "id": "S6",
+      "title": "냉수펌프 CHWP-2 연동 기동",
+      "action": "CH-2 운전에 연동한 냉수펌프 기동을 확인한다.",
+      "preconditions": [
+        {
+          "tag": "CH2_STATUS",
+          "op": "==",
+          "value": 1
+        }
+      ],
+      "expected": [
+        {
+          "tag": "CHWP2_STATUS",
+          "op": "==",
+          "value": 1,
+          "within_sec": 20,
+          "hold_sec": 0
+        }
+      ],
+      "abort_conditions": [
+        {
+          "tag": "CHWS_T_SUP",
+          "op": ">",
+          "value": 14
+        }
+      ],
+      "rollback": [
+        "CHWP-2 수동 정지"
+      ],
+      "changes_state": true
+    },
+    {
+      "id": "S7",
+      "title": "냉수 공급온도 회복",
+      "action": "공급온도 트렌드를 관찰한다.",
+      "preconditions": [
+        {
+          "tag": "CHWP2_STATUS",
+          "op": "==",
+          "value": 1
+        }
+      ],
+      "expected": [
+        {
+          "tag": "CHWS_TEMP_SUPPLY",
+          "op": "in_band",
+          "band": [
+            6,
+            8
+          ],
+          "within_sec": 60,
+          "hold_sec": 10
+        }
+      ],
+      "abort_conditions": [
+        {
+          "tag": "CHWS_T_SUP",
+          "op": ">",
+          "value": 14
+        }
+      ],
+      "rollback": [
+        "CH-1 수동 재기동"
+      ],
+      "changes_state": false
+    },
+    {
+      "id": "S8",
+      "title": "정상 상태 복구",
+      "action": "트립 접점을 복구하고 CH-1을 재기동한 뒤 CH-2를 대기로 복귀시킨다.",
+      "preconditions": [
+        {
+          "tag": "CH2_STATUS",
+          "op": "==",
+          "value": 1
+        }
+      ],
+      "trigger": {
+        "tag": "CH1_TRIP",
+        "op": "==",
+        "value": 0
+      },
+      "expected": [
+        {
+          "tag": "CH1_STATUS",
+          "op": "==",
+          "value": 1,
+          "within_sec": 60,
+          "hold_sec": 0
+        },
+        {
+          "tag": "CH2_STATUS",
+          "op": "==",
+          "value": 0,
+          "within_sec": 90,
+          "hold_sec": 0
+        }
+      ],
+      "abort_conditions": [],
+      "rollback": [
+        "수동 운전 전환"
+      ],
+      "changes_state": true,
+      "trigger_wait_sec": 180
+    }
+  ]
+}
