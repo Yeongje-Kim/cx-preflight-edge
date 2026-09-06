@@ -5,19 +5,19 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Cx-Preflight Edge</title>
   <link rel="stylesheet" href="/static/uplot.min.css" />
-  <link rel="stylesheet" href="/static/style.css?v=2" />
+  <link rel="stylesheet" href="/static/style.css?v=3" />
 </head>
 <body class="mode-prep">
   <header>
     <span class="title">Cx-Preflight Edge</span>
     <span id="badge-mode" class="mode prep">준비</span>
-    <span class="sub">폐쇄망 통합시운전 시험절차 사전검증 · 텔레메트리 근거 판정</span>
+    <span class="sub">폐쇄망 통합시운전 절차 사전검증과 텔레메트리 판정</span>
     <span class="spacer"></span>
-    <span id="badge-offline" class="badge unknown">External Cloud Connection: …</span>
-    <span id="badge-llm" class="badge unknown">LLM: …</span>
-    <span id="badge-lat" class="badge dim">판정 지연 — ms</span>
-    <span id="badge-mem" class="badge dim">RAM —</span>
-    <span id="badge-t" class="badge dim mono only-run">t — / — s</span>
+    <span id="badge-offline" class="badge unknown">외부 통신 확인 중</span>
+    <span id="badge-llm" class="badge unknown">LLM 확인 중</span>
+    <span id="badge-lat" class="badge dim">판정 지연 -</span>
+    <span id="badge-mem" class="badge dim">RAM -</span>
+    <span id="badge-t" class="badge dim only-run">t 0 / 0 s</span>
     <a id="nav-prep" class="nav only-run" href="#">준비 화면으로</a>
     <a id="nav-run" class="nav only-prep" href="#" hidden>실행 화면으로</a>
     <a class="nav" href="/history">히스토리</a>
@@ -28,7 +28,7 @@
     <section class="prep" id="prep">
       <div class="col">
         <div class="card" id="s-create">
-          <div class="card-head"><span>0. 세션</span><span id="session-id" class="mono dim"></span></div>
+          <div class="card-head"><span>세션</span><span id="session-id" class="mono dim"></span></div>
           <div class="row">
             <label>데모 케이스 <select id="sel-case"></select></label>
             <label>절차서 구조화 <select id="sel-mode">
@@ -42,12 +42,12 @@
         </div>
 
         <div class="card" id="s-plan">
-          <div class="card-head"><span>1. 시험절차서 원문</span><button id="btn-toggle-md" class="link">접기/펼치기</button></div>
+          <div class="card-head"><span>시험절차서 원문</span><button id="btn-toggle-md" class="link">접기/펼치기</button></div>
           <pre id="plan-md" class="doc">세션을 생성하면 절차서 원문이 표시됩니다.</pre>
         </div>
 
         <div class="card" id="s-rules">
-          <div class="card-head"><span>2. 구조화 규칙 (AI 추출 → 엔지니어 승인 대상)</span><span id="rules-backend" class="dim small"></span></div>
+          <div class="card-head"><span>구조화 규칙 (AI 추출, 엔지니어 승인 대상)</span><span id="rules-backend" class="dim small"></span></div>
           <div class="table-wrap">
             <table id="rules-table">
               <thead><tr><th>단계</th><th>사전조건</th><th>트리거</th><th>기대 결과 (허용/유지 s)</th><th>중단</th><th>복구</th><th>상태변경</th></tr></thead>
@@ -59,14 +59,14 @@
 
       <div class="col">
         <div class="card" id="s-preflight">
-          <div class="card-head"><span>3. Preflight 사전검증</span><span id="pf-summary" class="small"></span></div>
+          <div class="card-head"><span>Preflight 사전검증</span><span id="pf-summary" class="small"></span></div>
           <ul id="pf-rule" class="findings"></ul>
           <div class="dim small" id="pf-ai-head">AI 제안 (규칙에 자동 반영되지 않음)</div>
           <ul id="pf-ai" class="findings ai"></ul>
         </div>
 
         <div class="card" id="s-approve">
-          <div class="card-head"><span>4. 규칙 승인 (엔지니어)</span><span id="approve-status" class="small"></span></div>
+          <div class="card-head"><span>규칙 승인 (엔지니어)</span><span id="approve-status" class="small"></span></div>
           <div class="row">
             <label>승인자 <input id="approver" value="commissioning engineer" /></label>
             <label class="small"><input type="checkbox" id="force" /> ERROR 있어도 강제 승인</label>
@@ -76,29 +76,29 @@
         </div>
 
         <div class="card" id="s-run">
-          <div class="card-head"><span>5. 시험 실행 (합성 SIL 텔레메트리 재생)</span></div>
+          <div class="card-head"><span>시험 실행 (합성 SIL 텔레메트리 재생)</span></div>
           <div class="row">
             <label>텔레메트리 <select id="sel-tel"></select></label>
             <label>배속 <select id="sel-speed">
               <option value="1">1x</option><option value="5" selected>5x</option><option value="20">20x</option><option value="0">즉시</option>
             </select></label>
-            <button id="btn-run" class="primary" disabled>실행 → 실행 화면</button>
+            <button id="btn-run" class="primary" disabled>실행</button>
           </div>
-          <div class="dim small">기능검증용 합성 데이터 · 임의 기준값. 실제 적용 시 승인 시험계획서 기준 사용.</div>
+          <div class="dim small">기능검증용 합성 데이터와 임의 기준값입니다. 실제 적용 시 승인 시험계획서 기준을 사용합니다.</div>
         </div>
       </div>
     </section>
 
     <!-- ================================================================ 실행 모드 -->
     <section class="run" id="run">
-      <!-- ① 계통 모식도 -->
+      <!-- 계통 모식도 -->
       <div class="card area-mimic" id="s-mimic">
-        <div class="card-head"><span>① 냉수 계통 · 냉동기 N+1 전환</span><span id="mimic-note" class="small dim mono"></span></div>
+        <div class="card-head"><span>냉수 계통, 냉동기 N+1 전환</span><span id="mimic-note" class="small dim mono"></span></div>
         <svg id="mimic" viewBox="0 0 780 250" preserveAspectRatio="xMidYMid meet" role="img" aria-label="냉수 계통 모식도">
           <defs>
             <pattern id="hatch" width="8" height="8" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
-              <rect width="8" height="8" fill="#1d252f" />
-              <line x1="0" y1="0" x2="0" y2="8" stroke="#566573" stroke-width="3" />
+              <rect width="8" height="8" fill="#21262c" />
+              <line x1="0" y1="0" x2="0" y2="8" stroke="#545c64" stroke-width="3" />
             </pattern>
           </defs>
 
@@ -114,26 +114,26 @@
             <path class="pipe sup" d="M450 195 H705 V150" />
             <path class="flow-arrow sup" d="M360 189 L372 195 L360 201 z" /><path class="flow-arrow sup" d="M640 189 L652 195 L640 201 z" />
             <path class="pipe sup stub" d="M565 172 V195" />
-            <text class="pipe-label" x="380" y="19" text-anchor="middle">환수 헤더 · CHWR_T_RET <tspan id="m-ret" class="pipe-val">—</tspan></text>
+            <text class="pipe-label" x="380" y="19" text-anchor="middle">환수 헤더 CHWR_T_RET <tspan id="m-ret" class="pipe-val">-</tspan></text>
             <text class="pipe-label" x="235" y="215" text-anchor="middle">공급 헤더</text>
           </g>
 
           <!-- CH-1 -->
           <g id="m-ch1" class="eq na" transform="translate(50 70)">
-            <rect class="eq-box" width="130" height="80" rx="8" />
+            <rect class="eq-box" width="130" height="80" rx="4" />
             <text class="eq-name" x="10" y="20">CH-1 냉동기</text>
             <text class="eq-state" x="10" y="56">계측 없음</text>
-            <g class="eq-badge"><rect x="76" y="6" width="48" height="16" rx="8" /><text x="100" y="18" text-anchor="middle">TRIP 접점</text></g>
-            <text class="eq-tag" x="10" y="72">CH1_STATUS · CH1_TRIP</text>
+            <g class="eq-badge"><rect x="76" y="6" width="48" height="16" rx="4" /><text x="100" y="18" text-anchor="middle">TRIP 접점</text></g>
+            <text class="eq-tag" x="10" y="72">CH1_STATUS  CH1_TRIP</text>
           </g>
 
           <!-- CH-2 -->
           <g id="m-ch2" class="eq na" transform="translate(230 70)">
-            <rect class="eq-box" width="130" height="80" rx="8" />
+            <rect class="eq-box" width="130" height="80" rx="4" />
             <text class="eq-name" x="10" y="20">CH-2 대기기</text>
             <text class="eq-state" x="10" y="56">계측 없음</text>
-            <g class="eq-badge"><rect x="88" y="6" width="36" height="16" rx="8" /><text x="106" y="18" text-anchor="middle">CMD</text></g>
-            <text class="eq-tag" x="10" y="72">CH2_STATUS · CH2_CMD</text>
+            <g class="eq-badge"><rect x="88" y="6" width="36" height="16" rx="4" /><text x="106" y="18" text-anchor="middle">CMD</text></g>
+            <text class="eq-tag" x="10" y="72">CH2_STATUS  CH2_CMD</text>
           </g>
 
           <!-- CHWP-2 펌프 -->
@@ -146,69 +146,69 @@
 
           <!-- 공급온도 -->
           <g id="m-sup" class="eq na" transform="translate(495 106)">
-            <rect class="eq-box" width="140" height="66" rx="8" />
+            <rect class="eq-box" width="140" height="66" rx="4" />
             <text class="eq-name" x="10" y="17">공급온도 CHWS_T_SUP</text>
             <text class="eq-value" x="70" y="52" text-anchor="middle">계측 없음</text>
           </g>
 
           <!-- 부하 -->
           <g id="m-load" class="eq na" transform="translate(650 80)">
-            <rect class="eq-box" width="110" height="70" rx="8" />
+            <rect class="eq-box" width="110" height="70" rx="4" />
             <text class="eq-name" x="10" y="19">부하기 LB-01</text>
-            <text class="eq-value mid" x="55" y="50" text-anchor="middle">—</text>
+            <text class="eq-value mid" x="55" y="50" text-anchor="middle">-</text>
             <text class="eq-tag" x="10" y="63">LOAD_KW</text>
           </g>
 
-          <text class="mimic-caption" x="12" y="243">SIL 합성 시계열 · 기능검증용 임의 기준값 · 읽기 전용(제어 명령 없음)</text>
+          <text class="mimic-caption" x="12" y="243">SIL 합성 시계열, 기능검증용 임의 기준값, 읽기 전용(제어 명령 없음)</text>
         </svg>
       </div>
 
-      <!-- ④ 실측 로그 -->
+      <!-- 실측 로그 -->
       <div class="card area-live" id="s-live">
-        <div class="card-head"><span>④ 실측 로그 <span id="live-step" class="mono dim"></span></span><span id="live-state" class="small mono"></span></div>
+        <div class="card-head"><span>실측 로그 <span id="live-step" class="dim"></span></span><span id="live-state" class="small mono"></span></div>
         <div id="live-action" class="lv-action"></div>
         <div id="live-expect" class="live">
           <div class="dim small">실행이 시작되면 진행 중인 단계의 기대조건별 실측값이 표시됩니다.</div>
         </div>
       </div>
 
-      <!-- ② 텔레메트리 차트 -->
+      <!-- 텔레메트리 차트 -->
       <div class="card area-chart" id="s-chart">
-        <div class="card-head"><span>② 텔레메트리</span><span class="legend small">
+        <div class="card-head"><span>텔레메트리</span><span class="legend small">
           <i class="sw temp"></i>CHWS_T_SUP &nbsp; <i class="sw band"></i>허용 band 6~8 &nbsp; <i class="sw abort"></i>중단 14 &nbsp; <i class="sw ex"></i>허용시간 초과 &nbsp; <i class="sw dl"></i>마감 &nbsp;
           <i class="sw ch1"></i>CH1 &nbsp; <i class="sw ch2"></i>CH2 &nbsp; <i class="sw pump"></i>CHWP2</span></div>
         <div id="chart"></div>
       </div>
 
-      <!-- ⑤ 판정 카드 -->
+      <!-- 판정 카드 -->
       <div class="card area-verdict" id="s-verdict">
-        <div class="card-head"><span>⑤ 판정 (규칙 엔진)</span><span id="verdict-count" class="small"></span></div>
+        <div class="card-head"><span>판정 (규칙 엔진)</span><span id="verdict-count" class="small"></span></div>
         <div id="verdict-card" class="verdict unknown">
-          <div class="vstate">—</div>
+          <div class="vstate">-</div>
           <div class="vbody">
             <div class="vstep"></div>
             <div class="vreason">아직 판정 없음</div>
             <div class="vchips"></div>
           </div>
         </div>
-        <div class="dim small vnote">PASS·FAIL·ABORT는 규칙 판정. <b style="color:var(--hold)">HOLD(보류)</b>는 판정에 필요한 값이 없어 판정하지 않은 단계로, 설비 불합격이 아니며 엔지니어 확인 대상이다.</div>
+        <div class="dim small vnote">PASS, FAIL, ABORT는 규칙 판정입니다. <b style="color:var(--hold)">HOLD(보류)</b>는 판정에 필요한 값이 없어 판정하지 않은 단계로, 설비 불합격이 아니며 엔지니어 확인 대상입니다.</div>
       </div>
 
-      <!-- ③ 단계 타임라인 -->
+      <!-- 단계 타임라인 -->
       <div class="card area-timeline" id="s-timeline">
-        <div class="card-head"><span>③ 단계 타임라인</span><span id="tl-overall" class="small"></span><span id="run-status" class="small mono dim"></span></div>
+        <div class="card-head"><span>단계 타임라인</span><span id="tl-overall" class="stats"></span><span id="run-status" class="small mono dim"></span></div>
         <div id="timeline"></div>
       </div>
 
-      <!-- ⑥ 판정 기록 -->
+      <!-- 판정 기록 -->
       <div class="card area-vlist" id="s-vlist">
-        <div class="card-head"><span>⑥ 판정 기록</span><span class="small dim">최신순</span></div>
+        <div class="card-head"><span>판정 기록</span><span class="small dim">최신순</span></div>
         <ul id="verdict-list" class="events"></ul>
       </div>
 
       <!-- 기록 초안 -->
       <div class="card area-report" id="s-report">
-        <div class="card-head"><span>⑦ 시험 기록 초안</span><span id="report-meta" class="small dim"></span>
+        <div class="card-head"><span>시험 기록 초안</span><span id="report-meta" class="small dim"></span>
           <button id="btn-report" class="link" disabled>재생성</button></div>
         <pre id="report" class="doc">실행이 끝나면 한국어 기록 초안이 생성됩니다.</pre>
       </div>
@@ -216,6 +216,6 @@
   </main>
 
   <script src="/static/uplot.min.js"></script>
-  <script src="/static/app.js?v=2"></script>
+  <script src="/static/app.js?v=3"></script>
 </body>
 </html>

@@ -26,7 +26,7 @@ function setModeBadge() {
   const b = $("badge-mode");
   if (S.mode === "prep") { b.className = "mode prep"; b.textContent = "준비"; return; }
   if (S.running) { b.className = "mode running"; b.textContent = "RUNNING"; return; }
-  if (S.overall) { b.className = `mode done ${S.overall}`; b.textContent = `완료 · ${S.overall}`; return; }
+  if (S.overall) { b.className = `mode done ${S.overall}`; b.textContent = `완료 ${S.overall}`; return; }
   b.className = "mode run"; b.textContent = "실행";
 }
 
@@ -41,13 +41,13 @@ async function statusLoop() {
       const d = await (await fetch(`${API}/status`, { cache: "no-store" })).json();
       const o = d.offline || {};
       const off = $("badge-offline");
-      if (o.is_offline) { off.className = "badge ok"; off.textContent = "External Cloud Connection: OFF (폐쇄망 확인)"; }
-      else { off.className = "badge bad"; off.textContent = `External Cloud Connection: ${o.offline_score}/4 (DNS ${o.dns_blocked ? "차단" : "가능"}, TCP ${o.connect_blocked ? "차단" : "가능"}, 기본경로 ${o.default_route === false ? "없음" : o.default_route === true ? "있음" : "미확인"}, tx ${o.tx_delta_bytes ?? "미측정"})`; }
+      if (o.is_offline) { off.className = "badge ok"; off.textContent = "외부 통신 차단 확인"; }
+      else { off.className = "badge bad"; off.textContent = `외부 통신 가능 ${o.offline_score}/4 (DNS ${o.dns_blocked ? "차단" : "가능"}, TCP ${o.connect_blocked ? "차단" : "가능"}, 기본경로 ${o.default_route === false ? "없음" : o.default_route === true ? "있음" : "미확인"})`; }
       const llm = $("badge-llm");
-      if (d.llm && d.llm.alive) { llm.className = "badge ok"; llm.textContent = `LLM: ${d.llm.backend} (on-device)`; }
-      else { llm.className = "badge unknown"; llm.textContent = "LLM: 없음 (골든·템플릿 폴백)"; }
-      if (!S.running) $("badge-lat").textContent = `판정 지연 ${d.last_latency_ms == null ? "—" : d.last_latency_ms.toFixed(3)} ms`;
-      $("badge-mem").textContent = `RAM ${o.mem_used_mb ?? "—"}/${o.mem_total_mb ?? "—"} MB${o.cpu_load1 != null ? ` · load ${o.cpu_load1.toFixed(2)}` : ""}`;
+      if (d.llm && d.llm.alive) { llm.className = "badge ok"; llm.textContent = `LLM ${d.llm.backend} on-device`; }
+      else { llm.className = "badge unknown"; llm.textContent = "LLM 없음, 골든/템플릿 폴백"; }
+      if (!S.running) $("badge-lat").textContent = `판정 지연 ${d.last_latency_ms == null ? "-" : d.last_latency_ms.toFixed(3) + " ms"}`;
+      $("badge-mem").textContent = `RAM ${o.mem_used_mb ?? "-"}/${o.mem_total_mb ?? "-"} MB${o.cpu_load1 != null ? `  load ${o.cpu_load1.toFixed(2)}` : ""}`;
       if (!S.cases.length && d.cases) { S.cases = d.cases; fillCases(d); }
     } catch (e) { $("badge-offline").className = "badge unknown"; }
     await new Promise((r) => setTimeout(r, 2000));
@@ -57,7 +57,7 @@ async function statusLoop() {
 function fillCases(d) {
   const sel = $("sel-case");
   sel.innerHTML = "";
-  for (const c of d.cases) { const o = document.createElement("option"); o.value = c.name; o.textContent = `${c.name} — ${c.desc}`; sel.appendChild(o); }
+  for (const c of d.cases) { const o = document.createElement("option"); o.value = c.name; o.textContent = `${c.name}: ${c.desc}`; sel.appendChild(o); }
   const tel = $("sel-tel");
   tel.innerHTML = "";
   for (const t of d.telemetry_cases) { const o = document.createElement("option"); o.value = t; o.textContent = t; tel.appendChild(o); }
@@ -74,7 +74,7 @@ async function createSession() {
   S.sid = meta.id;
   $("session-id").textContent = meta.id;
   $("plan-md").textContent = await (await fetch(`${API}/sessions/${S.sid}/plan_md`)).text();
-  $("extract-status").textContent = body.mode === "llm" ? "온디바이스 LLM이 절차서를 단계별로 구조화하는 중… (4B 모델, 단계당 수 초)" : "승인본(골든) 규칙을 불러왔습니다.";
+  $("extract-status").textContent = body.mode === "llm" ? "온디바이스 LLM이 절차서를 단계별로 구조화하는 중입니다 (4B 모델, 단계당 수 초)" : "승인본(골든) 규칙을 불러왔습니다.";
   await waitPlanReady();
   $("btn-create").disabled = false;
 }
@@ -85,7 +85,7 @@ async function waitPlanReady() {
     if (pf.status === "ready") {
       const d = await (await fetch(`${API}/sessions/${S.sid}`)).json();
       S.plan = d.plan; S.steps = d.plan.steps.map((s) => s.id);
-      $("rules-backend").textContent = `출처: ${d.meta.backend}` + (d.meta.timings && d.meta.timings.extract_sec ? ` · 추출 ${d.meta.timings.extract_sec.toFixed(1)}s` : "");
+      $("rules-backend").textContent = `출처 ${d.meta.backend}` + (d.meta.timings && d.meta.timings.extract_sec ? `, 추출 ${d.meta.timings.extract_sec.toFixed(1)}s` : "");
       $("extract-status").textContent = d.meta.summary && d.meta.summary.note ? d.meta.summary.note : (d.meta.backend.startsWith("golden") ? "승인본(골든) 규칙" : `LLM 추출 완료 (${d.meta.summary.extract ? d.meta.summary.extract.n_ok + "/" + d.meta.summary.extract.n_total + " 단계" : ""})`);
       renderRules(d.plan);
       $("approve-status").textContent = "";
@@ -118,26 +118,26 @@ function renderRules(plan) {
   for (const s of plan.steps) {
     const tr = document.createElement("tr");
     const exp = s.expected.map((e) => `${condText(e)} (${e.within_sec}/${e.hold_sec})`).join("<br>") || '<span class="dim">없음</span>';
-    tr.innerHTML = `<td class="mono"><b>${s.id}</b><br><span class="dim">${s.title}</span></td>
+    tr.innerHTML = `<td class="step"><b class="mono">${s.id}</b><br><span class="dim">${s.title}</span></td>
       <td>${s.preconditions.map(condText).join("<br>") || '<span class="dim">없음</span>'}</td>
-      <td>${s.trigger ? condText(s.trigger) : '<span class="dim">—</span>'}</td>
+      <td>${s.trigger ? condText(s.trigger) : '<span class="dim">없음</span>'}</td>
       <td>${exp}</td>
-      <td>${s.abort_conditions.map(condText).join("<br>") || '<span class="dim">—</span>'}</td>
+      <td>${s.abort_conditions.map(condText).join("<br>") || '<span class="dim">없음</span>'}</td>
       <td>${s.rollback.join("; ") || '<span class="dim">없음</span>'}</td>
-      <td>${s.changes_state ? "있음" : "—"}</td>`;
+      <td>${s.changes_state ? "있음" : "없음"}</td>`;
     tb.appendChild(tr);
   }
 }
 
 function renderPreflight(pf) {
   const ul = $("pf-rule"); ul.innerHTML = "";
-  if (!pf.rule.length) { const li = document.createElement("li"); li.className = "empty"; li.textContent = "결함 없음: 6개 검사 통과 (사전조건·순서·기대결과·태그·복구·기준값)"; ul.appendChild(li); }
+  if (!pf.rule.length) { const li = document.createElement("li"); li.className = "empty"; li.textContent = "결함 없음: 6개 검사 통과 (사전조건, 순서, 기대결과, 태그, 복구, 기준값)"; ul.appendChild(li); }
   for (const f of pf.rule) { const li = document.createElement("li"); li.className = f.severity; li.innerHTML = `<span class="code">${f.code}</span>${f.message}`; ul.appendChild(li); }
-  $("pf-summary").textContent = `ERROR ${pf.n_error ?? 0} · WARN ${pf.n_warn ?? 0}`;
+  $("pf-summary").textContent = `ERROR ${pf.n_error ?? 0}  WARN ${pf.n_warn ?? 0}`; $("pf-summary").classList.add("mono");
   $("pf-summary").style.color = pf.n_error ? "var(--bad)" : (pf.n_warn ? "var(--warn)" : "var(--ok)");
   // ERROR가 있으면 승인 게이트가 닫힌 상태임을 미리 보여준다 (서버가 승인 요청을 거부한다)
   if (pf.n_error && !$("approve-status").textContent.startsWith("승인됨")) {
-    $("approve-status").textContent = `승인 차단 · ERROR ${pf.n_error}건 — 절차서를 수정해 재검증하거나 강제 승인 사유를 남겨야 한다`;
+    $("approve-status").textContent = `승인 차단: ERROR ${pf.n_error}건. 절차서를 수정해 재검증하거나 강제 승인 사유를 남겨야 합니다`;
     $("approve-status").style.color = "var(--bad)";
   }
   const ai = $("pf-ai"); ai.innerHTML = "";
@@ -150,7 +150,7 @@ async function approve() {
   const r = await fetch(`${API}/sessions/${S.sid}/approve`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
   const d = await r.json();
   if (!r.ok) { $("approve-status").textContent = d.detail || "승인 실패"; $("approve-status").style.color = "var(--bad)"; return; }
-  $("approve-status").textContent = `승인됨 · ${d.approver} · ${new Date().toLocaleTimeString()}${d.n_error ? ` · ERROR ${d.n_error}건 강제` : ""}`;
+  $("approve-status").textContent = `승인됨, ${d.approver}, ${new Date().toLocaleTimeString()}${d.n_error ? `, ERROR ${d.n_error}건 강제` : ""}`;
   $("approve-status").style.color = d.n_error ? "var(--warn)" : "var(--ok)";
   $("btn-run").disabled = false;
 }
@@ -186,7 +186,7 @@ function handleEvent(ev) {
   switch (ev.type) {
     case "run_start":
       S.nSamples = ev.n_samples; S.steps = ev.steps; S.running = true;
-      $("run-status").textContent = `${ev.telemetry} · ${ev.speed}x · 0/${ev.n_samples}`;
+      $("run-status").textContent = `${ev.telemetry}  ${ev.speed}x  0/${ev.n_samples}`;
       renderTimeline(); setModeBadge();
       break;
     case "sample": {
@@ -195,7 +195,7 @@ function handleEvent(ev) {
       S.states = ev.states; S.lastVals = v; if (ev.active) S.active = ev.active;
       if (S.data.t.length % 2 === 0 || !S.running) updateChart();
       renderTimeline(); renderMimic(S.mimicFreeze ? S.mimicFreeze.vals : v, S.mimicFreeze ? S.mimicFreeze : { t: ev.t }); renderLiveExpect(); setElapsed();
-      $("run-status").textContent = `${$("sel-tel").value} · t=${ev.t.toFixed(0)}s · ${S.data.t.length}/${S.nSamples}`;
+      $("run-status").textContent = `${$("sel-tel").value}  ${S.data.t.length}/${S.nSamples}`;
       break;
     }
     case "event":
@@ -221,10 +221,9 @@ function handleEvent(ev) {
       break;
     case "run_done":
       S.running = false; S.overall = ev.summary.overall; updateChart(); renderTimeline(); renderLiveExpect(); setModeBadge();
-      $("tl-overall").textContent = `종합 ${ev.summary.overall} · PASS ${ev.summary.n_pass} · FAIL ${ev.summary.n_fail} · HOLD ${ev.summary.n_hold ?? 0} · SKIPPED ${ev.summary.n_skipped} · ${ev.timings.run_wall_sec.toFixed(1)}s`;
-      $("tl-overall").style.color = overallColor(ev.summary.overall);
-      $("run-status").textContent += ` · 완료 · 외부 전송 ${ev.offline.tx_delta_bytes == null ? "미측정" : ev.offline.tx_delta_bytes + " B"}`;
-      $("report").textContent = "보고서 생성 중… (온디바이스 LLM 종합 의견)";
+      setStats(ev.summary, ev.timings.run_wall_sec);
+      $("run-status").textContent += `  완료  외부 전송 ${ev.offline.tx_delta_bytes == null ? "미측정" : ev.offline.tx_delta_bytes + " B"}`;
+      $("report").textContent = "보고서 생성 중 (온디바이스 LLM 종합 의견)";
       break;
     case "report":
       loadReport(ev);
@@ -240,13 +239,21 @@ function handleEvent(ev) {
 
 async function loadReport(ev) {
   $("report").textContent = await (await fetch(`${API}/sessions/${S.sid}/report`, { cache: "no-store" })).text();
-  $("report-meta").textContent = `문안 출처 ${ev.source} · ${(ev.sec || 0).toFixed(1)}s`;
+  $("report-meta").textContent = `문안 출처 ${ev.source}, ${(ev.sec || 0).toFixed(1)}s`;
 }
 
 async function regenReport() {
-  $("btn-report").disabled = true; $("report").textContent = "재생성 중…";
+  $("btn-report").disabled = true; $("report").textContent = "재생성 중";
   const d = await (await fetch(`${API}/sessions/${S.sid}/report`, { method: "POST" })).json();
   await loadReport(d); $("btn-report").disabled = false;
+}
+
+function setStats(sm, wall) {
+  const el = $("tl-overall");
+  if (!sm || !sm.overall) { el.innerHTML = ""; return; }
+  const item = (k, v, color) => `<span>${k} <b style="color:${color || "var(--text)"}">${v}</b></span>`;
+  el.innerHTML = [item("종합", sm.overall, overallColor(sm.overall)), item("PASS", sm.n_pass ?? "-", "var(--ok)"), item("FAIL", sm.n_fail ?? "-", sm.n_fail ? "var(--bad)" : null),
+    item("HOLD", sm.n_hold ?? 0, sm.n_hold ? "var(--hold)" : null), item("SKIPPED", sm.n_skipped ?? "-", null), wall != null ? item("s", wall.toFixed(1), null) : ""].join("");
 }
 
 function overallColor(o) {
@@ -267,7 +274,7 @@ function renderMimic(v, at) {
   const has = (k) => v != null && v[k] != null;
   const note = $("mimic-note");
   if (!at || at.t == null) note.textContent = "";
-  else if (at.step) { note.textContent = `${at.step} ${at.state} 시점 t=${at.t.toFixed(0)}s 고정`; note.style.color = stateColor(at.state); }
+  else if (at.step) { note.textContent = `${at.step} ${at.state} 시점 t=${at.t.toFixed(0)}s에서 고정`; note.style.color = stateColor(at.state); }
   else { note.textContent = `t=${at.t.toFixed(0)}s`; note.style.color = ""; }
   // CH-1: 트립 접점이 들어오면 TRIP, 아니면 운전/정지
   if (!has("CH1_STATUS") && !has("CH1_TRIP")) setEq("m-ch1", "na", "계측 없음", false);
@@ -313,8 +320,8 @@ function renderLiveExpect() {
   const fz = S.frozen[id];
   const vals = fz ? fz.vals : (S.lastVals || {});
   const tNow = fz ? fz.t : S.now;
-  $("live-step").textContent = `${id} ${s.title}`;
-  $("live-state").textContent = `${st} · t=${tNow.toFixed(0)}s`; $("live-state").style.color = stateColor(st);
+  $("live-step").innerHTML = `<span class="mono">${id}</span> ${s.title}`;
+  $("live-state").textContent = `${st}  t=${tNow.toFixed(0)}s`; $("live-state").style.color = stateColor(st);
   $("live-action").textContent = s.action || "";
   const rows = [];
   const KIND = { precond: "사전", trigger: "트리거", expected: "기대", abort: "중단" };
@@ -324,20 +331,20 @@ function renderLiveExpect() {
     const elapsed = t0 != null ? Math.max(0, tNow - t0) : null;
     let cls, label;
     if (kind === "abort") { // 중단 조건은 성립하면 나쁜 것
-      if (v == null) { cls = "na"; label = "결측"; } else if (met) { cls = "bad"; label = "✗ 발동"; } else { cls = "idle"; label = "미발동"; }
+      if (v == null) { cls = "na"; label = "결측"; } else if (met) { cls = "bad"; label = "발동"; } else { cls = "idle"; label = "미발동"; }
     }
     else if (v == null) { cls = "na"; label = "결측"; }
     else if (met) { cls = "ok"; label = "성립"; }
-    else if (elapsed != null && allowed != null && elapsed > allowed) { cls = "bad"; label = "✗ 초과"; }
+    else if (elapsed != null && allowed != null && elapsed > allowed) { cls = "bad"; label = "초과"; }
     else { cls = "wait"; label = "대기"; }
     if (fz && kind === "expected") { // 종료된 단계는 상태로 확정 표시
       if (st === "PASS") { cls = "ok"; label = "성립"; }
-      else if (st === "FAIL" && v != null && !met) { cls = "bad"; label = "✗ 초과"; }
-      else if (st === "HOLD") { cls = "na"; label = "결측 → 보류"; }
+      else if (st === "FAIL" && v != null && !met) { cls = "bad"; label = "초과"; }
+      else if (st === "HOLD") { cls = "na"; label = "결측, 보류"; }
       else if (st === "ABORT") { cls = "bad"; label = "중단"; }
     }
     const showTime = kind !== "abort" && elapsed != null;
-    rows.push(`<div class="lv-row ${cls}"><span class="lv-kind">${KIND[kind]}</span><span class="lv-tag mono">${c.tag}</span><span class="lv-crit mono">${critText(c)}</span><span class="lv-val mono">실측 ${v == null ? "—" : (typeof v === "number" ? (Number.isInteger(v) ? v : v.toFixed(1)) : v)}</span><span class="lv-time mono">${showTime ? `경과 ${elapsed.toFixed(0)}s${allowed != null ? ` / 허용 ${allowed}s` : ""}` : ""}</span><span class="lv-st">${label}</span></div>`);
+    rows.push(`<div class="lv-row ${cls}"><span class="lv-kind">${KIND[kind]}</span><span class="lv-tag mono">${c.tag}</span><span class="lv-crit mono">${critText(c)}</span><span class="lv-val mono">실측 ${v == null ? "-" : (typeof v === "number" ? (Number.isInteger(v) ? v : v.toFixed(1)) : v)}</span><span class="lv-time mono">${showTime ? `경과 ${elapsed.toFixed(0)}s${allowed != null ? ` / 허용 ${allowed}s` : ""}` : ""}</span><span class="lv-st">${label}</span></div>`);
   };
   const tr = S.tRun[id];
   const armedOnly = !tr || tr.armed;
@@ -364,11 +371,11 @@ function stateColor(st) {
 // ---------------------------------------------------------------- ⑤ 판정 카드 / ⑥ 판정 기록
 function setVerdictCard(v) {
   const c = $("verdict-card");
-  if (!v) { c.className = "verdict unknown"; c.querySelector(".vstate").textContent = "—"; c.querySelector(".vstep").textContent = ""; c.querySelector(".vreason").textContent = "아직 판정 없음"; c.querySelector(".vchips").innerHTML = ""; return; }
+  if (!v) { c.className = "verdict unknown"; c.querySelector(".vstate").textContent = "-"; c.querySelector(".vstep").textContent = ""; c.querySelector(".vreason").textContent = "아직 판정 없음"; c.querySelector(".vchips").innerHTML = ""; return; }
   c.className = `verdict ${v.state}`;
   c.querySelector(".vstate").textContent = v.state;
   const s = S.plan ? S.plan.steps.find((x) => x.id === v.step_id) : null;
-  c.querySelector(".vstep").textContent = `${v.step_id} ${s ? s.title : ""}`;
+  c.querySelector(".vstep").innerHTML = `<span class="mono">${v.step_id}</span> ${s ? s.title : ""}`;
   c.querySelector(".vreason").textContent = v.reason_ko;
   const e = v.evidence || {}, x = e.extra || {};
   const seg = S.exceeded.find((g) => g.step_id === v.step_id);
@@ -524,7 +531,7 @@ async function loadExisting(sid) {
   $("approve-status").textContent = "";
   renderPreflight({ status: "ready", ...(d.preflight || { rule: [], ai: [] }) });
   $("btn-approve").disabled = false;
-  if (d.approved) { $("approve-status").textContent = `승인됨 · ${d.meta.summary.approved_by || ""}`; $("approve-status").style.color = "var(--ok)"; $("btn-run").disabled = false; }
+  if (d.approved) { $("approve-status").textContent = `승인됨, ${d.meta.summary.approved_by || ""}`; $("approve-status").style.color = "var(--ok)"; $("btn-run").disabled = false; }
   if (d.has_telemetry) {
     const tel = await (await fetch(`${API}/sessions/${sid}/telemetry`)).json();
     S.nSamples = tel.rows.length;
@@ -543,9 +550,8 @@ async function loadExisting(sid) {
     const bad = (d.verdicts || []).find((v) => ["FAIL", "HOLD", "ABORT"].includes(v.state) && v.t_end != null);
     if (bad) S.mimicFreeze = { ...S.frozen[bad.step_id], step: bad.step_id };
     updateChart(); renderTimeline(); renderMimic(S.mimicFreeze ? S.mimicFreeze.vals : S.lastVals, S.mimicFreeze || { t: S.now }); renderLiveExpect(); setElapsed();
-    $("tl-overall").textContent = `종합 ${s.overall || "-"} · PASS ${s.n_pass ?? "-"} · FAIL ${s.n_fail ?? "-"} · HOLD ${s.n_hold ?? "-"} · SKIPPED ${s.n_skipped ?? "-"}`;
-    $("tl-overall").style.color = overallColor(s.overall);
-    $("run-status").textContent = `${s.telemetry || ""} · 저장본 · 외부 전송 ${d.meta.offline && d.meta.offline.tx_delta_bytes != null ? d.meta.offline.tx_delta_bytes + " B" : "미측정"}`;
+    setStats(s, null);
+    $("run-status").textContent = `${s.telemetry || ""}  저장본  외부 전송 ${d.meta.offline && d.meta.offline.tx_delta_bytes != null ? d.meta.offline.tx_delta_bytes + " B" : "미측정"}`;
     if (d.has_report) { $("report").textContent = await (await fetch(`${API}/sessions/${sid}/report`)).text(); $("report-meta").textContent = `문안 출처 ${(d.remarks || {}).source || "-"}`; $("btn-report").disabled = false; }
     setMode("run");
   }
