@@ -333,7 +333,7 @@ def run_session(sid: str, body: dict = Body(default={})) -> dict:
                 for ev in events:
                     s.append_jsonl(sid, "events.jsonl", ev.model_dump(mode="json"))
                     bus.publish({"type": "event", **ev.model_dump(mode="json")})
-                    if ev.to_state.value in ("PASS", "FAIL", "ABORT", "SKIPPED"):
+                    if ev.to_state.value in ("PASS", "FAIL", "ABORT", "HOLD", "SKIPPED"):
                         v = next(x for x in reversed(eng.verdicts) if x.step_id == ev.step_id)
                         s.append_jsonl(sid, "verdicts.jsonl", v.model_dump(mode="json"))
                         st.last_latency_ms = v.latency_ms
