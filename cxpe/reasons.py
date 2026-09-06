@@ -17,7 +17,9 @@ SEVERITY: dict[ReasonCode, int] = {
     ReasonCode.STANDBY_START_TIMEOUT: 4,
     ReasonCode.TEMP_RECOVERY_TIMEOUT: 4,
     ReasonCode.STEP_TIMEOUT: 5,
+    ReasonCode.STREAM_ENDED_EARLY: 6,
     ReasonCode.SKIPPED_AFTER_FAIL: 8,
+    ReasonCode.SKIPPED_AFTER_HOLD: 8,
     ReasonCode.EXPECTED_MET: 9,
 }
 
@@ -62,9 +64,15 @@ def render_ko(code: ReasonCode, ev: Evidence) -> str:
     if code == ReasonCode.ABORT_CONDITION_HIT:
         return f"중단 조건 발생: {thr} (t={_num(ev.t)}초, 값 {_num(ev.value, 2)})"
     if code == ReasonCode.TAG_MISSING_DATA:
-        return f"계측 결측: {ev.tag} 값이 {_num(ev.elapsed_sec, 0)}초 이상 수신되지 않음 (t={_num(ev.t)}초)"
+        return (f"판정 보류 - 계측 결측: {ev.tag} 값이 {_num(ev.elapsed_sec, 0)}초 이상 수신되지 않아"
+                f" 판정하지 않음 (t={_num(ev.t)}초). 엔지니어 확인 필요")
+    if code == ReasonCode.STREAM_ENDED_EARLY:
+        return (f"판정 보류 - 판정 마감 전 계측 종료: {thr} 조건의 마감(t={_num(ev.deadline)}초) 이전에"
+                f" 데이터가 끊겨 판정하지 않음. 엔지니어 확인 필요")
     if code == ReasonCode.SKIPPED_AFTER_FAIL:
         return "선행 단계 실패로 미실행"
+    if code == ReasonCode.SKIPPED_AFTER_HOLD:
+        return "선행 단계 판정 보류로 미실행"
     return code.value
 
 

@@ -1,6 +1,7 @@
 :root {
   --bg: #0f1419; --panel: #161c24; --panel2: #1d252f; --line: #2a3440; --text: #e6edf3; --dim: #8b98a5;
   --ok: #2ecc71; --warn: #f5b041; --bad: #e74c3c; --abort: #c0392b; --run: #3498db; --armed: #7f8c8d; --skip: #566573;
+  --hold: #9b8cf5;
   --temp: #f39c12; --band: rgba(46, 204, 113, 0.18); --ex: rgba(231, 76, 60, 0.35);
   --ch1: #9b59b6; --ch2: #1abc9c; --pump: #5dade2;
 }
@@ -49,6 +50,7 @@ ul.findings li.empty { border-left-color: var(--ok); color: var(--ok); }
 .tl-track { position: relative; height: 18px; background: var(--panel2); border-radius: 4px; overflow: hidden; }
 .tl-bar { position: absolute; top: 0; bottom: 0; border-radius: 3px; opacity: 0.9; }
 .tl-bar.RUNNING { background: var(--run); } .tl-bar.PASS { background: var(--ok); } .tl-bar.FAIL { background: var(--bad); }
+.tl-bar.HOLD { background: repeating-linear-gradient(45deg, var(--hold), var(--hold) 5px, #2a2450 5px, #2a2450 10px); }
 .tl-bar.ABORT { background: var(--abort); } .tl-bar.ARMED { background: var(--armed); } .tl-bar.SKIPPED { background: repeating-linear-gradient(45deg, var(--skip), var(--skip) 4px, transparent 4px, transparent 8px); }
 .tl-ex { position: absolute; top: 0; bottom: 0; background: var(--ex); border-left: 2px solid var(--bad); border-right: 2px solid var(--bad); }
 .tl-now { position: absolute; top: 0; bottom: 0; width: 2px; background: #fff; opacity: 0.6; }
@@ -57,10 +59,10 @@ ul.findings li.empty { border-left-color: var(--ok); color: var(--ok); }
 .verdict .vstate { font-size: 26px; font-weight: 800; grid-row: span 3; align-self: center; }
 .verdict .vstep { font-weight: 600; } .verdict .vreason { font-size: 13px; } .verdict .vev { font-size: 11.5px; color: var(--dim); }
 .verdict.PASS .vstate { color: var(--ok); } .verdict.FAIL .vstate { color: var(--bad); } .verdict.ABORT .vstate { color: var(--abort); }
-.verdict.SKIPPED .vstate { color: var(--skip); } .verdict.unknown .vstate { color: var(--dim); }
+.verdict.HOLD .vstate { color: var(--hold); } .verdict.SKIPPED .vstate { color: var(--skip); } .verdict.unknown .vstate { color: var(--dim); }
 ul.events { list-style: none; margin: 0; padding: 0; max-height: 220px; overflow: auto; font-size: 12.5px; }
 ul.events li { display: grid; grid-template-columns: 52px 62px 1fr; gap: 8px; padding: 4px 6px; border-bottom: 1px solid var(--line); }
-ul.events li .st.PASS { color: var(--ok); } ul.events li .st.FAIL { color: var(--bad); } ul.events li .st.ABORT { color: var(--abort); } ul.events li .st.SKIPPED { color: var(--skip); }
+ul.events li .st.PASS { color: var(--ok); } ul.events li .st.FAIL { color: var(--bad); } ul.events li .st.HOLD { color: var(--hold); } ul.events li .st.ABORT { color: var(--abort); } ul.events li .st.SKIPPED { color: var(--skip); }
 .legend i.sw { display: inline-block; width: 10px; height: 10px; border-radius: 2px; margin-right: 4px; vertical-align: -1px; }
 .sw.temp { background: var(--temp); } .sw.band { background: var(--band); border: 1px solid var(--ok); } .sw.ex { background: var(--ex); border: 1px solid var(--bad); }
 .sw.ch1 { background: var(--ch1); } .sw.ch2 { background: var(--ch2); } .sw.pump { background: var(--pump); }
@@ -70,4 +72,4 @@ ul.events li .st.PASS { color: var(--ok); } ul.events li .st.FAIL { color: var(-
 .grid-sessions { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 10px; }
 .sess { cursor: pointer; }
 .sess:hover { border-color: var(--run); }
-.sess .ov { font-weight: 700; } .sess .ov.PASS { color: var(--ok); } .sess .ov.FAIL { color: var(--bad); } .sess .ov.ABORT { color: var(--abort); }
+.sess .ov { font-weight: 700; } .sess .ov.PASS { color: var(--ok); } .sess .ov.FAIL { color: var(--bad); } .sess .ov.HOLD { color: var(--hold); } .sess .ov.ABORT { color: var(--abort); }

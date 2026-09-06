@@ -37,7 +37,8 @@ DEMO_CASES: dict[str, dict[str, str]] = {
     "pass": {"plan": "golden/plan.json", "telemetry": "pass", "desc": "정상: 대기기 기동과 온도 회복이 허용시간 내"},
     "fail_start": {"plan": "golden/plan.json", "telemetry": "fail_start", "desc": "불합격: 대기기 기동 지연"},
     "fail_temp": {"plan": "golden/plan.json", "telemetry": "fail_temp", "desc": "불합격: 온도 회복 지연"},
-    "fail_dropout": {"plan": "golden/plan.json", "telemetry": "fail_dropout", "desc": "불합격: 공급온도 계측 결측"},
+    "fail_dropout": {"plan": "golden/plan.json", "telemetry": "fail_dropout",
+                     "desc": "보류: 공급온도 계측 결측으로 판정하지 않음(설비 불합격 아님)"},
 }
 
 

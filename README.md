@@ -53,7 +53,7 @@ python3 -m venv .venv && .venv/bin/pip install -e .
 | pass | 승인본 | 정상 | 8단계 PASS |
 | fail_start | 승인본 | 대기기 기동 45초 지연 | S5 FAIL(STANDBY_START_TIMEOUT), 초과 구간 58→72s, 이후 SKIPPED |
 | fail_temp | 승인본 | 회복 시정수 60s | S7 FAIL(TEMP_RECOVERY_TIMEOUT) |
-| fail_dropout | 승인본 | 공급온도 10초 결측 | S7 FAIL(TAG_MISSING_DATA) |
+| fail_dropout | 승인본 | 공급온도 10초 결측 | S7 **HOLD**(TAG_MISSING_DATA), 이후 SKIPPED. 종합 HOLD |
 
 모든 텔레메트리는 `cxpe/synth.py`가 만든 합성 데이터이며 정답 라벨을 함께 낸다. 시간·온도 기준은 기능검증용 임의 값이다. 실제 적용 시 프로젝트별 승인 시험계획서의 기준을 사용한다.
 
@@ -62,7 +62,7 @@ python3 -m venv .venv && .venv/bin/pip install -e .
 ```
 cxpe/schemas.py    TestPlan/Step/Cond/Expected, Finding, Verdict, Segment
 cxpe/preflight.py  PF01~PF06 결정적 검사
-cxpe/engine.py     단계 상태기계 (PENDING→ARMED→RUNNING→PASS|FAIL|ABORT, SKIPPED)
+cxpe/engine.py     단계 상태기계 (PENDING→ARMED→RUNNING→PASS|FAIL|ABORT|HOLD, SKIPPED)
 cxpe/synth.py      냉동기 N+1 전환 합성 시계열 + 해석적 정답 라벨
 cxpe/llm/          client(GenieX/Rust/Fake), prompts, extract, report
 cxpe/server.py     FastAPI: 세션 → Preflight → 승인 → 재생(SSE) → 보고서

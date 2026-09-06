@@ -1,13 +1,18 @@
 """규칙 엔진: 승인된 시험절차(TestPlan)를 1Hz 텔레메트리에 대조해 단계별 PASS/FAIL/ABORT를 판정한다.
 
 상태 전이
-  PENDING → ARMED → RUNNING → PASS | FAIL | ABORT      (FAIL/ABORT 뒤 나머지 단계는 SKIPPED)
+  PENDING → ARMED → RUNNING → PASS | FAIL | ABORT | HOLD   (뒤 단계는 SKIPPED)
 
 ARMED   : 사전조건 대기(precond_wait_sec) → 트리거가 있으면 트리거 대기(trigger_wait_sec)
+          조건이 값으로 반증되면 FAIL, 값 자체가 없으면 HOLD.
 RUNNING : 중단 조건 → ABORT. 기대 결과가 within_sec 안에 성립하고 hold_sec 동안 유지되면 PASS.
           t > t_run_start + within_sec + hold_sec 인데 미확정이면 FAIL (코드는 태그로 결정).
           FAIL 뒤에도 그 조건이 실제로 성립하는 시각까지 추적해 exceeded 구간을 남긴다.
-          필요한 태그가 missing_tolerance_sec 이상 결측이면 FAIL TAG_MISSING_DATA.
+          필요한 태그가 missing_tolerance_sec 이상 결측이면 HOLD TAG_MISSING_DATA.
+
+HOLD(보류)는 "판정하지 않음"이다. 판정에 필요한 값이 없을 때 실패로 낮추지 않고 엔지니어 확인으로
+넘긴다. 값이 있어서 기준을 벗어난 경우만 FAIL이다. 이 구분이 없으면 계측 장애가 설비 불합격으로
+기록된다.
 
 판정은 이 모듈만 내린다. LLM은 관여하지 않는다.
 """
@@ -21,6 +26,11 @@ from .reasons import render_ko, timeout_code_for
 from .schemas import (
     Cond, Event, Evidence, Expected, ReasonCode, Sample, Segment, Step, StepState, TestPlan, Verdict,
 )
+
+
+def _or(v: Optional[float], default: float) -> float:
+    """0.0 을 falsy 로 흘려보내지 않는 폴백. t=0 에 시작한 단계의 경과시간이 0으로 계산되던 버그."""
+    return default if v is None else v
 
 
 @dataclass
@@ -91,7 +101,7 @@ class RunEngine:
         rt.evidence = ev
         e = self._transition(rt, to, t, codes, ev)
         self.segments.append(Segment(step_id=rt.step.id, kind="state", state=to,
-                                     t0=rt.t_run_start if rt.t_run_start is not None else (rt.t_armed or t),
+                                     t0=rt.t_run_start if rt.t_run_start is not None else _or(rt.t_armed, t),
                                      t1=t))
         self.verdicts.append(Verdict(
             step_id=rt.step.id, state=to, t_start=rt.t_run_start, t_end=t,
@@ -100,14 +110,18 @@ class RunEngine:
         ))
         return e
 
-    def _skip_rest(self, t: float, t0_perf: float) -> list[Event]:
+    def _skip_rest(self, t: float, t0_perf: float,
+                   code: ReasonCode = ReasonCode.SKIPPED_AFTER_FAIL) -> list[Event]:
         out = []
         for rt in self.rts[self.active + 1:]:
             if rt.state in (StepState.PENDING, StepState.ARMED):
-                out.append(self._finish_step(rt, StepState.SKIPPED, t, [ReasonCode.SKIPPED_AFTER_FAIL],
-                                             Evidence(), t0_perf))
+                out.append(self._finish_step(rt, StepState.SKIPPED, t, [code], Evidence(), t0_perf))
         self.active = len(self.rts)
         return out
+
+    @staticmethod
+    def _skip_code(state: StepState) -> ReasonCode:
+        return ReasonCode.SKIPPED_AFTER_HOLD if state == StepState.HOLD else ReasonCode.SKIPPED_AFTER_FAIL
 
     # ------------------------------------------------------------ main
     def feed(self, sample: Sample) -> list[Event]:
@@ -127,8 +141,11 @@ class RunEngine:
             ev_armed = self._step_armed(rt, sample, t, t0_perf)
             events.extend(ev_armed)
             if rt.state != StepState.RUNNING:
-                if rt.state in (StepState.FAIL,) and self.cfg.stop_on_fail:
-                    events.extend(self._skip_rest(t, t0_perf))
+                if rt.state in (StepState.FAIL, StepState.HOLD):
+                    if self.cfg.stop_on_fail:
+                        events.extend(self._skip_rest(t, t0_perf, self._skip_code(rt.state)))
+                    else:
+                        self.active += 1
                 return events
 
         if rt.state == StepState.RUNNING:
@@ -136,35 +153,45 @@ class RunEngine:
             events.extend(ev_run)
             if rt.state == StepState.PASS:
                 self.active += 1
-            elif rt.state in (StepState.FAIL, StepState.ABORT):
+            elif rt.state in (StepState.FAIL, StepState.ABORT, StepState.HOLD):
                 if self.cfg.stop_on_fail:
-                    events.extend(self._skip_rest(t, t0_perf))
+                    events.extend(self._skip_rest(t, t0_perf, self._skip_code(rt.state)))
                 else:
                     self.active += 1
         return events
 
     def _step_armed(self, rt: StepRuntime, sample: Sample, t: float, t0_perf: float) -> list[Event]:
         step = rt.step
-        unmet: Optional[Cond] = None
+        unmet: Optional[Cond] = None      # 값이 있는데 조건을 벗어남 → FAIL
+        unknown: Optional[Cond] = None    # 값 자체가 없음 → HOLD
         for c in step.preconditions:
             r = self._eval(sample, c)
             rt.last_values[c.tag] = self._val(sample, c.tag)
-            if r is not True:
+            if r is False and unmet is None:
                 unmet = c
-                break
-        if unmet is not None:
-            if t - (rt.t_armed or t) > step.precond_wait_sec:
-                ev = Evidence(tag=unmet.tag, t=t, value=rt.last_values.get(unmet.tag),
-                              threshold=unmet.threshold_text(), elapsed_sec=t - (rt.t_armed or t))
-                return [self._finish_step(rt, StepState.FAIL, t, [ReasonCode.PRECONDITION_NOT_MET], ev, t0_perf)]
+            elif r is None and unknown is None:
+                unknown = c
+        if unmet is not None or unknown is not None:
+            if t - _or(rt.t_armed, t) > step.precond_wait_sec:
+                waited = t - _or(rt.t_armed, t)
+                if unmet is not None:
+                    ev = Evidence(tag=unmet.tag, t=t, value=rt.last_values.get(unmet.tag),
+                                  threshold=unmet.threshold_text(), elapsed_sec=waited)
+                    return [self._finish_step(rt, StepState.FAIL, t, [ReasonCode.PRECONDITION_NOT_MET], ev, t0_perf)]
+                ev = Evidence(tag=unknown.tag, t=t, value=None,
+                              threshold=unknown.threshold_text(), elapsed_sec=waited)
+                return [self._finish_step(rt, StepState.HOLD, t, [ReasonCode.TAG_MISSING_DATA], ev, t0_perf)]
             return []
         if step.trigger is not None:
             r = self._eval(sample, step.trigger)
             rt.last_values[step.trigger.tag] = self._val(sample, step.trigger.tag)
             if r is not True:
-                if t - (rt.t_armed or t) > step.trigger_wait_sec:
+                if t - _or(rt.t_armed, t) > step.trigger_wait_sec:
+                    waited = t - _or(rt.t_armed, t)
                     ev = Evidence(tag=step.trigger.tag, t=t, value=rt.last_values.get(step.trigger.tag),
-                                  threshold=step.trigger.threshold_text(), elapsed_sec=t - (rt.t_armed or t))
+                                  threshold=step.trigger.threshold_text(), elapsed_sec=waited)
+                    if r is None:
+                        return [self._finish_step(rt, StepState.HOLD, t, [ReasonCode.TAG_MISSING_DATA], ev, t0_perf)]
                     return [self._finish_step(rt, StepState.FAIL, t, [ReasonCode.TRIGGER_NOT_OBSERVED], ev, t0_perf)]
                 return []
         rt.t_run_start = t
@@ -188,7 +215,7 @@ class RunEngine:
                 if t - rt.missing_since[tag] >= self.cfg.missing_tolerance_sec:
                     ev = Evidence(tag=tag, t=t, value=None, threshold=None,
                                   elapsed_sec=t - rt.missing_since[tag])
-                    return [self._finish_step(rt, StepState.FAIL, t, [ReasonCode.TAG_MISSING_DATA], ev, t0_perf)]
+                    return [self._finish_step(rt, StepState.HOLD, t, [ReasonCode.TAG_MISSING_DATA], ev, t0_perf)]
             else:
                 rt.missing_since.pop(tag, None)
         # 3) 기대 결과
@@ -259,28 +286,30 @@ class RunEngine:
                     tr.post_met_since = None
 
     def finish(self) -> list[Verdict]:
-        """스트림 종료. 미완 단계는 FAIL, 열린 exceeded 구간은 종료 시각으로 닫는다."""
+        """스트림 종료. 판정 마감 전에 끊긴 단계는 HOLD, 열린 exceeded 구간은 종료 시각으로 닫는다.
+
+        마감을 넘겼다면 feed() 안에서 이미 FAIL이 나왔다. 여기 남아 있다는 것은 마감 전에
+        데이터가 끊겼다는 뜻이므로 판정하지 않고 보류한다.
+        """
         t = self.last_t if self.last_t is not None else 0.0
         t0_perf = time.perf_counter()
         if self.active < len(self.rts):
             rt = self.rts[self.active]
             if rt.state == StepState.RUNNING:
                 exp = next((e for i, e in enumerate(rt.step.expected) if rt.tracks[i].confirmed_at is None), None)
-                code = timeout_code_for(exp.tag) if exp else ReasonCode.STEP_TIMEOUT
                 ev = Evidence(tag=exp.tag if exp else None, t=t, value=rt.last_values.get(exp.tag) if exp else None,
                               threshold=exp.threshold_text() if exp else None,
-                              deadline=(rt.t_run_start or t) + (exp.within_sec if exp else 0),
-                              elapsed_sec=t - (rt.t_run_start or t),
+                              deadline=_or(rt.t_run_start, t) + (exp.within_sec if exp else 0),
+                              elapsed_sec=t - _or(rt.t_run_start, t),
                               extra={"within_sec": exp.within_sec if exp else None, "stream_ended": True})
-                self._finish_step(rt, StepState.FAIL, t, [code], ev, t0_perf)
+                self._finish_step(rt, StepState.HOLD, t, [ReasonCode.STREAM_ENDED_EARLY], ev, t0_perf)
             elif rt.state in (StepState.ARMED, StepState.PENDING):
                 step = rt.step
-                code = ReasonCode.TRIGGER_NOT_OBSERVED if step.trigger else ReasonCode.PRECONDITION_NOT_MET
                 c = step.trigger or (step.preconditions[0] if step.preconditions else None)
                 ev = Evidence(tag=c.tag if c else None, t=t, threshold=c.threshold_text() if c else None,
-                              elapsed_sec=t - (rt.t_armed or t), extra={"stream_ended": True})
-                self._finish_step(rt, StepState.FAIL, t, [code], ev, t0_perf)
-            self._skip_rest(t, t0_perf)
+                              elapsed_sec=t - _or(rt.t_armed, t), extra={"stream_ended": True})
+                self._finish_step(rt, StepState.HOLD, t, [ReasonCode.STREAM_ENDED_EARLY], ev, t0_perf)
+            self._skip_rest(t, t0_perf, self._skip_code(rt.state))
         for rt in self.rts:
             for i, exp in enumerate(rt.step.expected):
                 tr = rt.tracks[i]
@@ -295,9 +324,12 @@ class RunEngine:
             overall = "ABORT"
         elif any(s == StepState.FAIL.value for s in states.values()):
             overall = "FAIL"
+        elif any(s == StepState.HOLD.value for s in states.values()):
+            overall = "HOLD"
         return {"overall": overall, "states": states,
                 "n_pass": sum(1 for s in states.values() if s == "PASS"),
                 "n_fail": sum(1 for s in states.values() if s == "FAIL"),
+                "n_hold": sum(1 for s in states.values() if s == "HOLD"),
                 "n_skipped": sum(1 for s in states.values() if s == "SKIPPED")}
 
 

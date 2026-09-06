@@ -34,12 +34,15 @@ def build_facts(plan: TestPlan, verdicts: list[Verdict], segments: list[Segment]
         overall = "ABORT"
     elif StepState.FAIL in states:
         overall = "FAIL"
+    elif StepState.HOLD in states:
+        overall = "HOLD"
     exceeded = [{"step_id": g.step_id, "t0": g.t0, "t1": g.t1} for g in segments if g.kind == "exceeded"]
     return {
         "plan_id": plan.plan_id, "title": plan.title, "overall": overall,
         "n_pass": sum(1 for s in states if s == StepState.PASS),
         "n_fail": sum(1 for s in states if s == StepState.FAIL),
         "n_abort": sum(1 for s in states if s == StepState.ABORT),
+        "n_hold": sum(1 for s in states if s == StepState.HOLD),
         "n_skipped": sum(1 for s in states if s == StepState.SKIPPED),
         "steps": steps, "exceeded": exceeded, "meta": meta or {},
     }
@@ -112,6 +115,14 @@ def _template_summary(facts: dict) -> str:
     n = len(facts["steps"])
     if facts["overall"] == "PASS":
         return f"총 {n}개 단계가 모두 승인 기준 내에서 성립하여 시험 결과는 합격이다."
+    if facts["overall"] == "HOLD":
+        held = [s for s in facts["steps"] if s["state"] == "HOLD"]
+        h = held[0] if held else None
+        if h is None:
+            return "판정 결과를 확인할 수 없다."
+        return (f"{h['id']} {h['title']} 단계는 판정에 필요한 계측값이 없어 시스템이 판정하지 않았다(보류). "
+                f"보류는 설비 불합격이 아니다. 계측 경로를 확인한 뒤 해당 단계부터 재시험하거나 "
+                f"엔지니어가 근거를 직접 확인해 판정해야 한다. 이후 {facts['n_skipped']}개 단계는 실행하지 않았다.")
     bad = [s for s in facts["steps"] if s["state"] in ("FAIL", "ABORT")]
     first = bad[0] if bad else None
     if first is None:
@@ -123,14 +134,19 @@ def _template_summary(facts: dict) -> str:
 def _template_actions(facts: dict) -> list[str]:
     if facts["overall"] == "PASS":
         return ["시험 기록을 승인 절차서와 함께 보관한다."]
-    out = ["실패 단계의 복구 절차를 수행하고 원인을 확인한 뒤 재시험을 계획한다."]
+    if facts["overall"] == "HOLD":
+        out = ["보류 단계는 설비 불합격이 아니다. 계측 경로를 복구한 뒤 해당 단계부터 재시험한다."]
+    else:
+        out = ["실패 단계의 복구 절차를 수행하고 원인을 확인한 뒤 재시험을 계획한다."]
     for s in facts["steps"]:
         if s["state"] == "FAIL" and "STANDBY_START_TIMEOUT" in s["reason_codes"]:
             out.append("대기 냉동기의 기동 시퀀스와 인터록 설정을 점검한다.")
         if s["state"] == "FAIL" and "TEMP_RECOVERY_TIMEOUT" in s["reason_codes"]:
             out.append("대기기 용량·냉수 유량과 온도 제어 설정을 점검한다.")
-        if s["state"] == "FAIL" and "TAG_MISSING_DATA" in s["reason_codes"]:
+        if s["state"] == "HOLD" and "TAG_MISSING_DATA" in s["reason_codes"]:
             out.append("계측점 통신 상태와 BMS 트렌드 설정을 점검한다.")
+        if s["state"] == "HOLD" and "STREAM_ENDED_EARLY" in s["reason_codes"]:
+            out.append("판정 마감 시각까지 트렌드가 기록되도록 수집 구간을 늘려 재시험한다.")
     return out[:3]
 
 
@@ -143,7 +159,9 @@ def render_report_md(facts: dict, remarks: dict, meta: Optional[dict] = None) ->
         f"- 작성 시각: {datetime.now().strftime('%Y-%m-%d %H:%M')}",
         f"- 세션: {meta.get('id', '-')}  · 케이스: {meta.get('case', '-')}  · 데이터: 합성 SIL(기능검증용, 임의 기준값)",
         f"- 판정 엔진: 규칙 엔진(승인 규칙)  · 문안: {remarks.get('source', '-')}  · 외부 전송: {meta.get('uplink', '0 B')}",
-        f"- **종합 판정: {facts['overall']}** (PASS {facts['n_pass']} / FAIL {facts['n_fail']} / ABORT {facts['n_abort']} / SKIPPED {facts['n_skipped']})",
+        f"- **종합 판정: {facts['overall']}** (PASS {facts['n_pass']} / FAIL {facts['n_fail']} / "
+        f"ABORT {facts['n_abort']} / HOLD {facts['n_hold']} / SKIPPED {facts['n_skipped']})",
+        "- 보류(HOLD)는 판정에 필요한 값이 없어 시스템이 판정하지 않은 단계다. 설비 불합격을 뜻하지 않는다.",
         "",
         "## 단계별 판정",
         "",

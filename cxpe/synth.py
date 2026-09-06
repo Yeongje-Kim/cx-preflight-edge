@@ -135,11 +135,11 @@ def expected_labels(p: SynthParams) -> dict:
     run7 = t6 + 1
     dead7 = run7 + 60.0
     if p.dropout is not None and p.dropout[0] >= run7 and p.dropout[0] < dead7:
-        t_fail = p.dropout[0] + 5.0
-        steps["S7"] = {"state": "FAIL", "codes": ["TAG_MISSING_DATA"], "t_end": t_fail}
+        t_hold = p.dropout[0] + 5.0
+        steps["S7"] = {"state": "HOLD", "codes": ["TAG_MISSING_DATA"], "t_end": t_hold}
         for sid in ("S8",):
-            steps[sid] = {"state": "SKIPPED", "codes": ["SKIPPED_AFTER_FAIL"], "t_end": t_fail}
-        return {"steps": steps, "exceeded": exceeded, "overall": "FAIL"}
+            steps[sid] = {"state": "SKIPPED", "codes": ["SKIPPED_AFTER_HOLD"], "t_end": t_hold}
+        return {"steps": steps, "exceeded": exceeded, "overall": "HOLD"}
     t_in = _first_in_band_after(p, run7)
     if t_in is None or t_in + 10.0 > dead7 + 10.0:
         steps["S7"] = {"state": "FAIL", "codes": ["TEMP_RECOVERY_TIMEOUT"], "t_end": dead7 + 10.0 + 1}

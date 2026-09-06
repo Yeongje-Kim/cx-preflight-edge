@@ -176,6 +176,7 @@ class StepState(str, Enum):
     PASS = "PASS"
     FAIL = "FAIL"
     ABORT = "ABORT"
+    HOLD = "HOLD"        # 판정에 필요한 값이 없어 시스템이 판정하지 않음. 엔지니어 확인 대상
     SKIPPED = "SKIPPED"
 
 
@@ -187,8 +188,10 @@ class ReasonCode(str, Enum):
     PRECONDITION_NOT_MET = "PRECONDITION_NOT_MET"
     TRIGGER_NOT_OBSERVED = "TRIGGER_NOT_OBSERVED"
     ABORT_CONDITION_HIT = "ABORT_CONDITION_HIT"
-    TAG_MISSING_DATA = "TAG_MISSING_DATA"
+    TAG_MISSING_DATA = "TAG_MISSING_DATA"          # HOLD 사유: 판정에 필요한 태그 값 부재
+    STREAM_ENDED_EARLY = "STREAM_ENDED_EARLY"      # HOLD 사유: 판정 마감 전 계측 스트림 종료
     SKIPPED_AFTER_FAIL = "SKIPPED_AFTER_FAIL"
+    SKIPPED_AFTER_HOLD = "SKIPPED_AFTER_HOLD"
 
 
 class Evidence(BaseModel):

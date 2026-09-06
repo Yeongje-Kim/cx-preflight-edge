@@ -153,7 +153,7 @@ function handleEvent(ev) {
     }
     case "event":
       if (ev.to_state === "RUNNING") S.tRun[ev.step_id] = { t0: ev.t, t1: null };
-      if (["PASS", "FAIL", "ABORT"].includes(ev.to_state) && S.tRun[ev.step_id]) S.tRun[ev.step_id].t1 = ev.t;
+      if (["PASS", "FAIL", "ABORT", "HOLD"].includes(ev.to_state) && S.tRun[ev.step_id]) S.tRun[ev.step_id].t1 = ev.t;
       if (ev.to_state === "ARMED") S.tRun[ev.step_id] = S.tRun[ev.step_id] || { t0: ev.t, t1: null, armed: true };
       break;
     case "verdict":
@@ -167,8 +167,8 @@ function handleEvent(ev) {
       break;
     case "run_done":
       S.running = false; updateChart(); renderTimeline();
-      $("tl-overall").textContent = `종합 ${ev.summary.overall} · PASS ${ev.summary.n_pass} · FAIL ${ev.summary.n_fail} · SKIPPED ${ev.summary.n_skipped} · ${ev.timings.run_wall_sec.toFixed(1)}s`;
-      $("tl-overall").style.color = ev.summary.overall === "PASS" ? "var(--ok)" : "var(--bad)";
+      $("tl-overall").textContent = `종합 ${ev.summary.overall} · PASS ${ev.summary.n_pass} · FAIL ${ev.summary.n_fail} · HOLD ${ev.summary.n_hold ?? 0} · SKIPPED ${ev.summary.n_skipped} · ${ev.timings.run_wall_sec.toFixed(1)}s`;
+      $("tl-overall").style.color = overallColor(ev.summary.overall);
       $("run-status").textContent += ` · 완료 · 외부 전송 ${ev.offline.tx_delta_bytes == null ? "미측정" : ev.offline.tx_delta_bytes + " B"}`;
       $("report").textContent = "보고서 생성 중… (온디바이스 LLM 종합 의견)";
       break;
@@ -193,6 +193,12 @@ async function regenReport() {
   $("btn-report").disabled = true; $("report").textContent = "재생성 중…";
   const d = await (await fetch(`${API}/sessions/${S.sid}/report`, { method: "POST" })).json();
   await loadReport(d); $("btn-report").disabled = false;
+}
+
+function overallColor(o) {
+  if (o === "PASS") return "var(--ok)";
+  if (o === "HOLD") return "var(--hold)";
+  return "var(--bad)";
 }
 
 // ---------------------------------------------------------------- verdict UI
@@ -317,8 +323,8 @@ async function loadExisting(sid) {
     for (const v of d.verdicts || []) { S.states[v.step_id] = v.state; S.tRun[v.step_id] = { t0: v.t_start ?? v.t_end, t1: v.t_end }; S.verdicts.push(v); addVerdict(v); if (v.state !== "SKIPPED") setVerdictCard(v); }
     updateChart(); renderTimeline();
     const s = d.meta.summary || {};
-    $("tl-overall").textContent = `종합 ${s.overall || "-"} · PASS ${s.n_pass ?? "-"} · FAIL ${s.n_fail ?? "-"} · SKIPPED ${s.n_skipped ?? "-"}`;
-    $("tl-overall").style.color = s.overall === "PASS" ? "var(--ok)" : "var(--bad)";
+    $("tl-overall").textContent = `종합 ${s.overall || "-"} · PASS ${s.n_pass ?? "-"} · FAIL ${s.n_fail ?? "-"} · HOLD ${s.n_hold ?? "-"} · SKIPPED ${s.n_skipped ?? "-"}`;
+    $("tl-overall").style.color = overallColor(s.overall);
     $("run-status").textContent = `${s.telemetry || ""} · 저장본 · 외부 전송 ${d.meta.offline && d.meta.offline.tx_delta_bytes != null ? d.meta.offline.tx_delta_bytes + " B" : "미측정"}`;
     if (d.has_report) { $("report").textContent = await (await fetch(`${API}/sessions/${sid}/report`)).text(); $("report-meta").textContent = `문안 출처 ${(d.remarks || {}).source || "-"}`; $("btn-report").disabled = false; }
   }

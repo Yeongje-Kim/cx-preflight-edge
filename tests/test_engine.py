@@ -93,18 +93,49 @@ def test_abort_condition():
     assert eng.summary()["overall"] == "ABORT"
 
 
-def test_missing_data():
+def test_missing_data_holds_not_fails():
+    """결측은 설비 불합격이 아니다. 판정하지 않고 보류한다."""
     samples = rows([(0, {"X": 1}), (1, {"X": 1})]) + rows([(t, {"X": 1, "Y": None}) for t in range(2, 9)])
     eng = run_stream(mini_plan(), samples)
-    assert states(eng)["B"] == StepState.FAIL
+    assert states(eng)["B"] == StepState.HOLD
     assert codes(eng, "B") == [ReasonCode.TAG_MISSING_DATA]
+    assert eng.summary()["overall"] == "HOLD"
+    assert eng.summary()["n_hold"] == 1
 
 
-def test_stream_end_marks_running_step_fail():
-    eng = run_stream(mini_plan(), rows([(0, {}), (1, {})]))
+def test_precondition_unknown_holds():
+    """사전조건 태그 값이 아예 없으면 미충족(FAIL)이 아니라 보류(HOLD)."""
+    eng = run_stream(mini_plan(), rows([(t, {"P": None}) for t in range(0, 6)]))
+    assert states(eng)["A"] == StepState.HOLD
+    assert codes(eng, "A") == [ReasonCode.TAG_MISSING_DATA]
+
+
+def test_hold_skips_rest_with_hold_code():
+    samples = rows([(0, {"X": 1}), (1, {"X": 1})]) + rows([(t, {"X": 1, "Y": None}) for t in range(2, 9)])
+    eng = run_stream(mini_plan(), samples)
+    b = [v for v in eng.verdicts if v.step_id == "B"][0]
+    assert b.state == StepState.HOLD
+    assert "보류" in b.reason_ko and "엔지니어" in b.reason_ko
+
+
+def test_fail_beats_hold_in_overall():
+    """값이 있어 기준을 벗어난 FAIL 은 보류보다 우선한다."""
+    plan = mini_plan()
+    plan.steps[0].expected[0].within_sec = 1
+    samples = rows([(t, {}) for t in range(0, 4)]) + rows([(t, {"X": 1}) for t in range(4, 9)])
+    eng = run_stream(plan, samples, EngineConfig(stop_on_fail=False))
     assert states(eng)["A"] == StepState.FAIL
-    assert codes(eng, "A") == [ReasonCode.STEP_TIMEOUT]
+    assert eng.summary()["overall"] == "FAIL"
+
+
+def test_stream_end_before_deadline_holds():
+    """마감 전에 계측이 끊기면 실패로 낮추지 않고 보류한다."""
+    eng = run_stream(mini_plan(), rows([(0, {}), (1, {})]))
+    assert states(eng)["A"] == StepState.HOLD
+    assert codes(eng, "A") == [ReasonCode.STREAM_ENDED_EARLY]
     assert eng.verdicts[0].evidence.extra.get("stream_ended") is True
+    assert states(eng)["B"] == StepState.SKIPPED
+    assert codes(eng, "B") == [ReasonCode.SKIPPED_AFTER_HOLD]
 
 
 def test_stop_on_fail_false_continues():
