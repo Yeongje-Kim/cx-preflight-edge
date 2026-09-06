@@ -1,0 +1,78 @@
+{
+  "precision": 0.8431372549019608,
+  "recall": 0.8431372549019608,
+  "f1": 0.8431372549019607,
+  "golden_items": 51,
+  "pred_items": 51,
+  "by_field": {
+    "abort": {
+      "golden": 5,
+      "pred": 5,
+      "tp": 5,
+      "precision": 1.0,
+      "recall": 1.0
+    },
+    "changes_state": {
+      "golden": 8,
+      "pred": 8,
+      "tp": 7,
+      "precision": 0.875,
+      "recall": 0.875
+    },
+    "expected": {
+      "golden": 9,
+      "pred": 9,
+      "tp": 8,
+      "precision": 0.8888888888888888,
+      "recall": 0.8888888888888888
+    },
+    "precondition": {
+      "golden": 10,
+      "pred": 10,
+      "tp": 10,
+      "precision": 1.0,
+      "recall": 1.0
+    },
+    "rollback": {
+      "golden": 9,
+      "pred": 9,
+      "tp": 3,
+      "precision": 0.3333333333333333,
+      "recall": 0.3333333333333333
+    },
+    "title": {
+      "golden": 8,
+      "pred": 8,
+      "tp": 8,
+      "precision": 1.0,
+      "recall": 1.0
+    },
+    "trigger": {
+      "golden": 2,
+      "pred": 2,
+      "tp": 2,
+      "precision": 1.0,
+      "recall": 1.0
+    }
+  },
+  "missing": [
+    "('S2', 'expected', 'LOAD_KW >= 200', 30.0, 10.0)",
+    "('S2', 'rollback', '부하기 출력을 0 kW로 하강')",
+    "('S3', 'rollback', '트립 접점 복구')",
+    "('S5', 'rollback', 'CH-2 수동 정지')",
+    "('S6', 'rollback', 'CHWP-2 수동 정지')",
+    "('S7', 'changes_state', False)",
+    "('S7', 'rollback', 'CH-1 수동 재기동')",
+    "('S8', 'rollback', '수동 운전 전환')"
+  ],
+  "extra": [
+    "('S2', 'expected', 'LOAD_KW > 200', 10.0, 30.0)",
+    "('S2', 'rollback', '부하기 출력을 0 kW로 하강한다.')",
+    "('S3', 'rollback', '트립 접점을 복구')",
+    "('S5', 'rollback', 'CH-2를 수동 정지한다.')",
+    "('S6', 'rollback', 'CHWP-2를 수동 정지한다.')",
+    "('S7', 'changes_state', True)",
+    "('S7', 'rollback', 'CH-1을 수동 재기동한다.')",
+    "('S8', 'rollback', '수동 운전으로 전환한다.')"
+  ]
+}

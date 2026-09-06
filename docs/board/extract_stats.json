@@ -1,0 +1,65 @@
+{
+  "backend": "geniex-18181",
+  "steps": [
+    {
+      "step_id": "S1",
+      "attempts": 1,
+      "ok": true,
+      "error": null,
+      "sec": 8.488201741999546
+    },
+    {
+      "step_id": "S2",
+      "attempts": 1,
+      "ok": true,
+      "error": null,
+      "sec": 8.309964437000417
+    },
+    {
+      "step_id": "S3",
+      "attempts": 1,
+      "ok": true,
+      "error": null,
+      "sec": 11.251216182999997
+    },
+    {
+      "step_id": "S4",
+      "attempts": 1,
+      "ok": true,
+      "error": null,
+      "sec": 9.617320916999233
+    },
+    {
+      "step_id": "S5",
+      "attempts": 1,
+      "ok": true,
+      "error": null,
+      "sec": 8.598690288000398
+    },
+    {
+      "step_id": "S6",
+      "attempts": 1,
+      "ok": true,
+      "error": null,
+      "sec": 9.686598876000062
+    },
+    {
+      "step_id": "S7",
+      "attempts": 1,
+      "ok": true,
+      "error": null,
+      "sec": 9.215892348000125
+    },
+    {
+      "step_id": "S8",
+      "attempts": 1,
+      "ok": true,
+      "error": null,
+      "sec": 11.61670280099952
+    }
+  ],
+  "fallback_ids": [],
+  "n_ok": 8,
+  "n_total": 8,
+  "sec_total": 76.7845875919993
+}

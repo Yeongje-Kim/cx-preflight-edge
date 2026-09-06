@@ -5,6 +5,9 @@ is_offline 조건 4가지를 모두 만족할 때만 OFF 배지:
   connect_blocked  : 1.1.1.1:443 TCP 연결 실패 (SYN 1개가 나갈 수 있으나 데이터는 없다)
   no_default_route : 기본 경로 없음 (Linux /proc/net/route; 그 외 OS는 None=미확인)
   tx_delta_zero    : 세션 중 WAN 인터페이스 송신 바이트 증가 0 (Linux sysfs; 인터페이스는 CXPE_WAN_IF)
+
+루프백 외 인터페이스가 하나도 없으면(no_external_iface) 송신 통로 자체가 없으므로 tx_delta_zero 를
+0으로 본다. 네트워크 네임스페이스 안에서 실행할 때가 이 경우이며, 폐쇄망 증거로는 가장 강하다.
 """
 from __future__ import annotations
 
@@ -79,6 +82,16 @@ def wan_iface() -> Optional[str]:
     return None
 
 
+def external_ifaces() -> list[str]:
+    """루프백을 뺀 네트워크 인터페이스 목록. 비어 있으면 외부로 나갈 통로 자체가 없다."""
+    if not _IS_LINUX:
+        return []
+    try:
+        return sorted(p.name for p in Path("/sys/class/net").iterdir() if p.name != "lo")
+    except Exception:
+        return []
+
+
 def tx_bytes(iface: Optional[str]) -> Optional[int]:
     if not iface or not _IS_LINUX:
         return None
@@ -146,6 +159,12 @@ def status(meter: Optional[UplinkMeter] = None) -> dict:
         "tx_delta_bytes": meter.delta() if meter else None,
         "platform": platform.system(),
     }
+    # 루프백 말고 인터페이스가 하나도 없으면 송신할 통로 자체가 없다. 가장 강한 형태의 폐쇄망이다.
+    d["external_ifaces"] = external_ifaces()
+    d["no_external_iface"] = _IS_LINUX and not d["external_ifaces"]
+    if d["no_external_iface"]:
+        d["wan_iface"] = None
+        d["tx_delta_bytes"] = 0
     checks = [d["dns_blocked"], d["connect_blocked"], d["default_route"] is False,
               d["tx_delta_bytes"] == 0]
     d["is_offline"] = all(checks)

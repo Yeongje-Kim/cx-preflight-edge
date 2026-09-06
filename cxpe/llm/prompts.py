@@ -10,7 +10,8 @@ STEP_SCHEMA_EXAMPLE = {
     "id": "S3", "title": "CH-1 모의 트립", "action": "CH-1 트립 접점을 모의 입력한다.",
     "preconditions": [{"tag": "CH1_STATUS", "op": "==", "value": 1}],
     "trigger": {"tag": "CH1_TRIP", "op": "==", "value": 1},
-    "expected": [{"tag": "CH1_STATUS", "op": "==", "value": 0, "within_sec": 5, "hold_sec": 0}],
+    "expected": [{"tag": "CH1_STATUS", "op": "==", "value": 0, "within_sec": 5, "hold_sec": 0},
+                 {"tag": "CHWS_T_SUP", "op": "in_band", "band": [6, 8], "within_sec": 60, "hold_sec": 10}],
     "abort_conditions": [{"tag": "CHWS_T_SUP", "op": ">", "value": 14}],
     "rollback": ["트립 접점 복구", "CH-1 재기동"],
     "changes_state": True,
@@ -22,7 +23,9 @@ EXTRACT_SYSTEM = (
     "id, title, action, preconditions, trigger, expected, abort_conditions, rollback, changes_state. "
     "Each condition is {\"tag\", \"op\", \"value\"} or {\"tag\", \"op\": \"in_band\", \"band\": [lo, hi]}; "
     "op is one of ==, !=, <, <=, >, >=, in_band. Expected results add within_sec (seconds) and hold_sec "
-    "(seconds of continuous hold, 0 if not stated). Use the BMS tag names that appear in the text "
+    "(seconds of continuous hold, 0 if not stated). Every item of expected is ONE object that "
+    "contains tag, op, value or band, within_sec and hold_sec together. Never split the timing "
+    "fields into a separate object. Use the BMS tag names that appear in the text "
     "(e.g. CH1_STATUS, CHWS_T_SUP). trigger is null when the text has no 트리거. rollback is a list of short "
     "Korean strings from 복구. changes_state is true only when the text says 상태 변경: 있음. "
     "Keep Korean text for title/action/rollback. Do not invent values that are not in the text."

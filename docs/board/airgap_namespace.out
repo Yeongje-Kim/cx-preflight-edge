@@ -1,0 +1,15 @@
+=== 네임스페이스 안 인터페이스 ===
+lo
+sysfs: lo 
+=== 폐쇄망 상태 ===
+{"version":"0.1.0","offline":{"dns_blocked":true,"connect_blocked":true,"default_route":false,"wan_iface":null,"tx_delta_bytes":0,"platform":"Linux","external_ifaces":[],"no_external_iface":true,"is_offline":true,"offline_score":4,"cpu_load1":0.87,"mem_used_mb":8464,"mem_total_mb":35213,"proc_rss_mb":50},"llm":{"backend":null,"alive":false},"last_latency_ms":null,"cases":[{"name":"preflight_warn","plan":"defective/mixed_demo.json","telemetry":"pass","desc":"사전검증 경고: 태그 미매핑 + 기대 결과 누락 + 복구 절차 누락"},{"name":"pass","plan":"golden/plan.json","telemetry":"pass","desc":"정상: 대기기 기동과 온도 회복이 허용시간 내"},{"name":"fail_start","plan":"golden/plan.json","telemetry":"fail_start","desc":"불합격: 대기기 기동 지연"},{"name":"fail_temp","plan":"golden/plan.json","telemetry":"fail_temp","desc":"불합격: 온도 회복 지연"},{"name":"fail_dropout","plan":"golden/plan.json","telemetry":"fail_dropout","desc":"보류: 공급온도 계측 결측으로 판정하지 않음(설비 불합격 아님)"}],"telemetry_cases":["fail_dropout","fail_start","fail_temp","no_start","pass"],"time":1788725342.78322}
+=== 세션 생성 (fail_dropout) ===
+session=cx-20260906-130902-8ae6
+{"status":"ready","rule":[],"ai":[],"n_error":0,"n_warn":0}
+{"approved":true,"approver":"engineer","n_error":0}
+{"started":true,"telemetry":"fail_dropout","speed":0.0,"n_samples":201}
+=== 종합 판정 ===
+HOLD
+보고서 생성 OK
+=== 세션 종료 시점 폐쇄망 상태 ===
+{"version":"0.1.0","offline":{"dns_blocked":true,"connect_blocked":true,"default_route":false,"wan_iface":null,"tx_delta_bytes":0,"platform":"Linux","external_ifaces":[],"no_external_iface":true,"is_offline":true,"offline_score":4,"cpu_load1":0.87,"mem_used_mb":8478,"mem_total_mb":35213,"proc_rss_mb":50},"llm":{"backend":null,"alive":false},"last_latency_ms":0.11130299935757648,"cases":[{"name":"preflight_warn","plan":"defective/mixed_demo.json","telemetry":"pass","desc":"사전검증 경고: 태그 미매핑 + 기대 결과 누락 + 복구 절차 누락"},{"name":"pass","plan":"golden/plan.json","telemetry":"pass","desc":"정상: 대기기 기동과 온도 회복이 허용시간 내"},{"name":"fail_start","plan":"golden/plan.json","telemetry":"fail_start","desc":"불합격: 대기기 기동 지연"},{"name":"fail_temp","plan":"golden/plan.json","telemetry":"fail_temp","desc":"불합격: 온도 회복 지연"},{"name":"fail_dropout","plan":"golden/plan.json","telemetry":"fail_dropout","desc":"보류: 공급온도 계측 결측으로 판정하지 않음(설비 불합격 아님)"}],"telemetry_cases":["fail_dropout","fail_start","fail_temp","no_start","pass"],"time":1788725344.0144656}

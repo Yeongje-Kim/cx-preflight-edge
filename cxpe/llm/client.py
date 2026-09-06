@@ -21,6 +21,10 @@ import httpx
 
 Messages = list[dict[str, str]]
 
+# 보드의 LLM 서버는 요청을 직렬 처리한다. 추론이 도는 동안에는 헬스체크 응답도 그만큼 늦으므로
+# 여유 있게 잡는다. 짧게 잡으면 추론 중에 "백엔드 없음"으로 잘못 판정한다.
+ALIVE_TIMEOUT = float(os.environ.get("CXPE_ALIVE_TIMEOUT", "20"))
+
 
 class LlmClient(Protocol):
     name: str
@@ -46,7 +50,7 @@ class NativeBackend:
 
     def alive(self) -> bool:
         try:
-            r = httpx.get(f"{self.base_url}/healthz", timeout=3.0)
+            r = httpx.get(f"{self.base_url}/healthz", timeout=ALIVE_TIMEOUT)
             return r.status_code == 200
         except Exception:
             return False
@@ -87,7 +91,7 @@ class GenieXBackend:
 
     def alive(self) -> bool:
         try:
-            r = httpx.get(f"{self.base_url}/v1/models", timeout=3.0)
+            r = httpx.get(f"{self.base_url}/v1/models", timeout=ALIVE_TIMEOUT)
             if r.status_code != 200:
                 return False
             if self.model is None:

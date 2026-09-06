@@ -1,0 +1,341 @@
+{
+  "plan_id": "IST-COOL-N1-01",
+  "title": "냉동기 N+1 자동 전환 시험 (냉수 계통)",
+  "equipment": [
+    "CH-1",
+    "CH-2",
+    "CHWP-2",
+    "TT-CHWS-01",
+    "LB-01"
+  ],
+  "steps": [
+    {
+      "id": "S1",
+      "title": "초기 상태 확인",
+      "action": "시험 시작 전 설비 상태를 BMS 화면에서 확인한다.",
+      "preconditions": [
+        {
+          "tag": "CH1_STATUS",
+          "op": "==",
+          "value": 1.0,
+          "band": null
+        },
+        {
+          "tag": "CH2_STATUS",
+          "op": "==",
+          "value": 0.0,
+          "band": null
+        }
+      ],
+      "trigger": null,
+      "expected": [
+        {
+          "tag": "CHWS_T_SUP",
+          "op": "in_band",
+          "value": null,
+          "band": [
+            6.0,
+            8.0
+          ],
+          "within_sec": 20.0,
+          "hold_sec": 10.0
+        }
+      ],
+      "abort_conditions": [],
+      "rollback": [],
+      "changes_state": false,
+      "precond_wait_sec": 10.0,
+      "trigger_wait_sec": 120.0,
+      "source_text": "### S1 초기 상태 확인\n- 조치: 시험 시작 전 설비 상태를 BMS 화면에서 확인한다.\n- 사전조건: CH-1 운전 중(CH1_STATUS = 1), CH-2 정지(CH2_STATUS = 0)\n- 기대 결과: 냉수 공급온도(CHWS_T_SUP) 6~8 °C를 10초 이상 유지. 허용시간 20초.\n- 복구: 해당 없음(상태 변경 없음)"
+    },
+    {
+      "id": "S2",
+      "title": "부하 안정 확인",
+      "action": "부하기 LB-01 출력을 200 kW로 유지한다.",
+      "preconditions": [
+        {
+          "tag": "LOAD_KW",
+          "op": ">",
+          "value": 0.0,
+          "band": null
+        }
+      ],
+      "trigger": null,
+      "expected": [
+        {
+          "tag": "LOAD_KW",
+          "op": ">",
+          "value": 200.0,
+          "band": null,
+          "within_sec": 10.0,
+          "hold_sec": 30.0
+        }
+      ],
+      "abort_conditions": [],
+      "rollback": [
+        "부하기 출력을 0 kW로 하강한다."
+      ],
+      "changes_state": true,
+      "precond_wait_sec": 10.0,
+      "trigger_wait_sec": 120.0,
+      "source_text": "### S2 부하 안정 확인\n- 조치: 부하기 LB-01 출력을 200 kW로 유지한다.\n- 사전조건: 부하기 운전 중(LOAD_KW > 0)\n- 기대 결과: LOAD_KW 200 kW 이상을 10초 이상 유지. 허용시간 30초.\n- 복구: 부하기 출력을 0 kW로 하강한다.\n- 상태 변경: 있음"
+    },
+    {
+      "id": "S3",
+      "title": "CH-1 모의 트립",
+      "action": "CH-1 트립 접점을 모의 입력한다.",
+      "preconditions": [
+        {
+          "tag": "CH1_STATUS",
+          "op": "==",
+          "value": 1.0,
+          "band": null
+        },
+        {
+          "tag": "CH2_STATUS",
+          "op": "==",
+          "value": 0.0,
+          "band": null
+        }
+      ],
+      "trigger": {
+        "tag": "CH1_TRIP",
+        "op": "==",
+        "value": 1.0,
+        "band": null
+      },
+      "expected": [
+        {
+          "tag": "CH1_STATUS",
+          "op": "==",
+          "value": 0.0,
+          "band": null,
+          "within_sec": 5.0,
+          "hold_sec": 0.0
+        }
+      ],
+      "abort_conditions": [
+        {
+          "tag": "CHWS_T_SUP",
+          "op": ">",
+          "value": 14.0,
+          "band": null
+        }
+      ],
+      "rollback": [
+        "트립 접점을 복구",
+        "CH-1 재기동"
+      ],
+      "changes_state": true,
+      "precond_wait_sec": 10.0,
+      "trigger_wait_sec": 120.0,
+      "source_text": "### S3 CH-1 모의 트립\n- 조치: CH-1 트립 접점을 모의 입력한다.\n- 사전조건: CH1_STATUS = 1, CH2_STATUS = 0\n- 트리거: CH1_TRIP = 1 (접점 입력 시각을 단계 시작으로 본다)\n- 기대 결과: CH-1 정지(CH1_STATUS = 0) 5초 이내\n- 중단 조건: CHWS_T_SUP > 14 °C\n- 복구: 트립 접점을 복구하고 CH-1을 재기동한다.\n- 상태 변경: 있음"
+    },
+    {
+      "id": "S4",
+      "title": "대기기 기동 지령 확인",
+      "action": "BMS 자동 전환 로직의 기동 지령 출력을 확인한다.",
+      "preconditions": [
+        {
+          "tag": "CH1_TRIP",
+          "op": "==",
+          "value": 1.0,
+          "band": null
+        }
+      ],
+      "trigger": null,
+      "expected": [
+        {
+          "tag": "CH2_CMD",
+          "op": "==",
+          "value": 1.0,
+          "band": null,
+          "within_sec": 10.0,
+          "hold_sec": 0.0
+        }
+      ],
+      "abort_conditions": [
+        {
+          "tag": "CHWS_T_SUP",
+          "op": ">",
+          "value": 14.0,
+          "band": null
+        }
+      ],
+      "rollback": [
+        "자동 전환 로직 비활성",
+        "수동 운전 전환"
+      ],
+      "changes_state": false,
+      "precond_wait_sec": 10.0,
+      "trigger_wait_sec": 120.0,
+      "source_text": "### S4 대기기 기동 지령 확인\n- 조치: BMS 자동 전환 로직의 기동 지령 출력을 확인한다.\n- 사전조건: CH1_TRIP = 1\n- 기대 결과: CH2_CMD = 1 이 10초 이내 출력\n- 중단 조건: CHWS_T_SUP > 14 °C\n- 복구: 자동 전환 로직을 비활성하고 수동 운전으로 전환한다."
+    },
+    {
+      "id": "S5",
+      "title": "CH-2 운전 확인",
+      "action": "CH-2 기동 및 운전 상태를 확인한다.",
+      "preconditions": [
+        {
+          "tag": "CH2_CMD",
+          "op": "==",
+          "value": 1.0,
+          "band": null
+        }
+      ],
+      "trigger": null,
+      "expected": [
+        {
+          "tag": "CH2_STATUS",
+          "op": "==",
+          "value": 1.0,
+          "band": null,
+          "within_sec": 30.0,
+          "hold_sec": 0.0
+        }
+      ],
+      "abort_conditions": [
+        {
+          "tag": "CHWS_T_SUP",
+          "op": ">",
+          "value": 14.0,
+          "band": null
+        }
+      ],
+      "rollback": [
+        "CH-2를 수동 정지한다."
+      ],
+      "changes_state": true,
+      "precond_wait_sec": 10.0,
+      "trigger_wait_sec": 120.0,
+      "source_text": "### S5 CH-2 운전 확인\n- 조치: CH-2 기동 및 운전 상태를 확인한다.\n- 사전조건: CH2_CMD = 1\n- 기대 결과: CH2_STATUS = 1 이 30초 이내 성립\n- 중단 조건: CHWS_T_SUP > 14 °C\n- 복구: CH-2를 수동 정지한다.\n- 상태 변경: 있음"
+    },
+    {
+      "id": "S6",
+      "title": "냉수펌프 CHWP-2 연동 기동",
+      "action": "CH-2 운전에 연동한 냉수펌프 기동을 확인한다.",
+      "preconditions": [
+        {
+          "tag": "CH2_STATUS",
+          "op": "==",
+          "value": 1.0,
+          "band": null
+        }
+      ],
+      "trigger": null,
+      "expected": [
+        {
+          "tag": "CHWP2_STATUS",
+          "op": "==",
+          "value": 1.0,
+          "band": null,
+          "within_sec": 20.0,
+          "hold_sec": 0.0
+        }
+      ],
+      "abort_conditions": [
+        {
+          "tag": "CHWS_T_SUP",
+          "op": ">",
+          "value": 14.0,
+          "band": null
+        }
+      ],
+      "rollback": [
+        "CHWP-2를 수동 정지한다."
+      ],
+      "changes_state": true,
+      "precond_wait_sec": 10.0,
+      "trigger_wait_sec": 120.0,
+      "source_text": "### S6 냉수펌프 CHWP-2 연동 기동\n- 조치: CH-2 운전에 연동한 냉수펌프 기동을 확인한다.\n- 사전조건: CH2_STATUS = 1\n- 기대 결과: CHWP2_STATUS = 1 이 20초 이내 성립\n- 중단 조건: CHWS_T_SUP > 14 °C\n- 복구: CHWP-2를 수동 정지한다.\n- 상태 변경: 있음"
+    },
+    {
+      "id": "S7",
+      "title": "냉수 공급온도 회복",
+      "action": "공급온도 트렌드를 관찰한다.",
+      "preconditions": [
+        {
+          "tag": "CHWP2_STATUS",
+          "op": "==",
+          "value": 1.0,
+          "band": null
+        }
+      ],
+      "trigger": null,
+      "expected": [
+        {
+          "tag": "CHWS_T_SUP",
+          "op": "in_band",
+          "value": null,
+          "band": [
+            6.0,
+            8.0
+          ],
+          "within_sec": 60.0,
+          "hold_sec": 10.0
+        }
+      ],
+      "abort_conditions": [
+        {
+          "tag": "CHWS_T_SUP",
+          "op": ">",
+          "value": 14.0,
+          "band": null
+        }
+      ],
+      "rollback": [
+        "CH-1을 수동 재기동한다."
+      ],
+      "changes_state": true,
+      "precond_wait_sec": 10.0,
+      "trigger_wait_sec": 120.0,
+      "source_text": "### S7 냉수 공급온도 회복\n- 조치: 공급온도 트렌드를 관찰한다.\n- 사전조건: CHWP2_STATUS = 1\n- 기대 결과: CHWS_T_SUP 6~8 °C로 60초 이내 회복하고 10초 이상 유지\n- 중단 조건: CHWS_T_SUP > 14 °C\n- 복구: CH-1을 수동 재기동한다."
+    },
+    {
+      "id": "S8",
+      "title": "정상 상태 복구",
+      "action": "트립 접점을 복구하고 CH-1을 재기동한 뒤 CH-2를 대기로 복귀시킨다.",
+      "preconditions": [
+        {
+          "tag": "CH2_STATUS",
+          "op": "==",
+          "value": 1.0,
+          "band": null
+        }
+      ],
+      "trigger": {
+        "tag": "CH1_TRIP",
+        "op": "==",
+        "value": 0.0,
+        "band": null
+      },
+      "expected": [
+        {
+          "tag": "CH1_STATUS",
+          "op": "==",
+          "value": 1.0,
+          "band": null,
+          "within_sec": 60.0,
+          "hold_sec": 0.0
+        },
+        {
+          "tag": "CH2_STATUS",
+          "op": "==",
+          "value": 0.0,
+          "band": null,
+          "within_sec": 90.0,
+          "hold_sec": 0.0
+        }
+      ],
+      "abort_conditions": [],
+      "rollback": [
+        "수동 운전으로 전환한다."
+      ],
+      "changes_state": true,
+      "precond_wait_sec": 10.0,
+      "trigger_wait_sec": 120.0,
+      "source_text": "### S8 정상 상태 복구\n- 조치: 트립 접점을 복구하고 CH-1을 재기동한 뒤 CH-2를 대기로 복귀시킨다.\n- 사전조건: CH2_STATUS = 1\n- 트리거: CH1_TRIP = 0 (접점 복구 확인 시각을 단계 시작으로 본다)\n- 기대 결과: CH1_STATUS = 1 이 60초 이내, CH2_STATUS = 0 이 90초 이내\n- 복구: 수동 운전으로 전환한다.\n- 상태 변경: 있음"
+    }
+  ],
+  "tag_aliases": {}
+}

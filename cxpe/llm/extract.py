@@ -93,6 +93,26 @@ def plan_header(md: str) -> tuple[str, str]:
     return (pid.group(1) if pid else "PLAN"), (title.group(1).strip() if title else "시험절차서")
 
 
+def _merge_orphan_timing(items: object) -> object:
+    """tag/op 없이 시간 필드만 있는 조건 객체를 바로 앞 조건에 병합한다.
+
+    4B 모델이 기대 결과 하나를 조건 객체와 시간 객체로 쪼개 내보내는 실패를 결정적으로 복구한다.
+    앞 조건이 없거나 병합할 수 없으면 그대로 두고 스키마 검증이 걸러낸다.
+    """
+    if not isinstance(items, list):
+        return items
+    out: list = []
+    for it in items:
+        if (isinstance(it, dict) and out and isinstance(out[-1], dict)
+                and "tag" not in it and "op" not in it
+                and set(it) <= {"within_sec", "hold_sec"} and it):
+            for k, v in it.items():
+                out[-1].setdefault(k, v)
+            continue
+        out.append(dict(it) if isinstance(it, dict) else it)
+    return out
+
+
 def _normalize_step(d: dict, step_id: str, title: str, source_text: str) -> dict:
     d = dict(d)
     d.setdefault("id", step_id)
@@ -105,6 +125,7 @@ def _normalize_step(d: dict, step_id: str, title: str, source_text: str) -> dict
         v = d.get(k)
         if v is None or v == "" or v == "null":
             d[k] = []
+    d["expected"] = _merge_orphan_timing(d.get("expected"))
     cs = d.get("changes_state", False)
     if isinstance(cs, str):
         d["changes_state"] = cs.strip().lower() in ("true", "1", "yes", "있음")
@@ -112,7 +133,7 @@ def _normalize_step(d: dict, step_id: str, title: str, source_text: str) -> dict
 
 
 def extract_step(client: LlmClient, step_id: str, title: str, text: str, max_tokens: int = 400,
-                 retries: int = 1) -> tuple[Optional[Step], dict]:
+                 retries: int = 2) -> tuple[Optional[Step], dict]:
     """단계 1개 추출. (Step|None, stats)."""
     stats = {"step_id": step_id, "attempts": 0, "ok": False, "error": None, "sec": 0.0}
     messages = extraction_messages(text)
@@ -133,8 +154,9 @@ def extract_step(client: LlmClient, step_id: str, title: str, text: str, max_tok
             last_err = f"{type(e).__name__}: {str(e)[:300]}"
         messages = messages + [
             {"role": "assistant", "content": "(invalid)"},
-            {"role": "user", "content": "Your previous output was not a valid JSON object for the schema. "
-                                        "Output ONLY the JSON object, nothing else."},
+            {"role": "user", "content": "Your previous output did not fit the schema. Error:\n"
+                                        + (last_err or "")[:400]
+                                        + "\nFix exactly these fields and output ONLY the JSON object."},
         ]
     stats["error"] = last_err
     stats["sec"] = time.perf_counter() - t0
