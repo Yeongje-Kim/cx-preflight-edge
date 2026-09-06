@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# 보드(Radxa Fogwise AIRbox Q900(Qualcomm IQ-9075 / QCS9075))에서 Cx-Preflight Edge를 띄운다.
+# 보드(Radxa Fogwise AIRbox Q900 (Qualcomm IQ-9075 / QCS9075))에서 Cx-Preflight Edge를 띄운다.
 #   ./scripts/run_board.sh          # 서버 기동. LLM 백엔드는 자동 탐지한다(GenieX 18181 → 네이티브 8091)
 #
 # 온디바이스 LLM 런타임은 보드에 미리 설치되어 있어야 한다. 이 저장소는 런타임을 포함하지 않고
