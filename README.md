@@ -1,6 +1,6 @@
 # Cx-Preflight Edge
 
-폐쇄망 데이터센터 통합시운전(IST/FPT) 시험절차를 **실행 전에 검증**하고, 승인된 같은 규칙으로 **시험 중 BMS 텔레메트리를 판정**해 근거 타임라인과 한국어 시험 기록 초안을 만드는 온디바이스 시스템이다. 대상 보드는 Radxa Airbox Q900(Qualcomm QCS9075, Qwen3-4B on NPU core 1)이며, 외부 클라우드 연결 없이 동작한다.
+폐쇄망 데이터센터 통합시운전(IST/FPT) 시험절차를 **실행 전에 검증**하고, 승인된 같은 규칙으로 **시험 중 BMS 텔레메트리를 판정**해 근거 타임라인과 한국어 시험 기록 초안을 만드는 온디바이스 시스템이다. 대상 보드는 Radxa Fogwise AIRbox Q900(Qualcomm IQ-9075 / QCS9075)이며 Qwen3-4B를 NPU 코어 1에서 상주 실행한다. 외부 클라우드 연결 없이 동작한다.
 
 제1회 HIMEC AI 활용 아이디어 공모전 출품작 (분야 ② 시공·품질관리).
 
@@ -38,12 +38,12 @@ make serve                                                   # http://127.0.0.1:
 ```bash
 git clone <this repo> && cd cx-preflight-edge
 python3 -m venv .venv && .venv/bin/pip install -e .
-./scripts/run_board.sh              # LLM 자동 탐지: GenieX(18181) → Rust llm 서비스(8091)
+./scripts/run_board.sh              # LLM 자동 탐지: GenieX(18181) → 네이티브 LLM 서비스(8091)
 ./scripts/wan_off.sh                # 데모: 기본 경로 제거 → 화면 배지 "External Cloud Connection: OFF"
 ./scripts/smoke.sh                  # 3케이스 자동 점검
 ```
 
-온디바이스 LLM 런타임(Qualcomm Genie, NPU 코어 1)은 보드에 미리 설치되어 있어야 한다. 이 저장소는 런타임을 포함하지 않고 로컬 HTTP로 호출만 한다.
+온디바이스 LLM 런타임(Qualcomm Genie, NPU 코어 1)은 보드에 미리 설치되어 있어야 한다. 이 저장소는 런타임을 포함하지 않고 로컬 HTTP로 호출만 한다. GenieX 서버(18181) 또는 네이티브 서비스(8091) 중 살아 있는 쪽을 자동으로 고른다.
 
 ## 데모 시나리오 (합성 SIL 데이터)
 
@@ -64,7 +64,7 @@ cxpe/schemas.py    TestPlan/Step/Cond/Expected, Finding, Verdict, Segment
 cxpe/preflight.py  PF01~PF06 결정적 검사
 cxpe/engine.py     단계 상태기계 (PENDING→ARMED→RUNNING→PASS|FAIL|ABORT|HOLD, SKIPPED)
 cxpe/synth.py      냉동기 N+1 전환 합성 시계열 + 해석적 정답 라벨
-cxpe/llm/          client(GenieX/Rust/Fake), prompts, extract, report
+cxpe/llm/          client(GenieX/Native/Fake), prompts, extract, report
 cxpe/server.py     FastAPI: 세션 → Preflight → 승인 → 재생(SSE) → 보고서
 web/               라이브 화면(uPlot vendored), 히스토리
 data/              시험절차서 원문, SOO 발췌, 태그리스트, 골든 JSON, 결함 변형 12개

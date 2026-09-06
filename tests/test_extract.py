@@ -5,7 +5,7 @@ import httpx
 import pytest
 
 from cxpe.engine import run_stream
-from cxpe.llm.client import FakeBackend, LlmError, RustBackend
+from cxpe.llm.client import FakeBackend, LlmError, NativeBackend
 from cxpe.llm.extract import chunk_steps, extract_plan, extract_step, parse_json_loose, plan_header
 from cxpe.llm.report import build_facts, draft_report_ko, guard_numbers, render_report_md
 from cxpe.schemas import TestPlan
@@ -92,7 +92,7 @@ def test_rust_backend_superseded_retry(monkeypatch):
 
     monkeypatch.setattr(httpx, "post", fake_post)
     monkeypatch.setattr("time.sleep", lambda s: None)
-    b = RustBackend()
+    b = NativeBackend()
     b.QUERY_GAP_SEC = 0
     out = b.complete([{"role": "user", "content": "hi"}])
     assert json.loads(out)["ok"] is True and calls["n"] == 2

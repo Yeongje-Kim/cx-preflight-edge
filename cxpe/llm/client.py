@@ -1,10 +1,12 @@
 """온디바이스 LLM 클라이언트. 백엔드 2종 + 테스트용 Fake.
 
 - GenieXBackend : 보드의 GenieX OpenAI 호환 서버(127.0.0.1:18181). enable_json으로 JSON 제약 디코딩.
-- RustBackend   : 보드에 설치된 네이티브 Genie LLM 서비스(127.0.0.1:8091). POST /api/v1/query.
+- NativeBackend : 보드에 설치된 네이티브 Genie LLM 서비스(127.0.0.1:8091). POST /api/v1/query.
                   쿼리 간 3초 갭이 강제되고, 갭 중 새 요청이 오면 이전 요청이 "superseded"로 실패한다.
                   그래서 Lock으로 직렬화하고 완료 후 3.5초를 기다린다.
 - FakeBackend   : 테스트. 응답 목록 또는 콜백.
+
+두 백엔드 모두 보드에 이미 설치된 런타임을 HTTP로 호출한다. 이 저장소는 런타임을 포함하지 않는다.
 
 모든 백엔드는 complete(messages, max_tokens, json_mode) -> str 만 제공한다.
 """
@@ -32,8 +34,8 @@ class LlmError(RuntimeError):
     pass
 
 
-class RustBackend:
-    name = "rust-genie-8091"
+class NativeBackend:
+    name = "native-genie-8091"
     QUERY_GAP_SEC = 3.5
 
     def __init__(self, base_url: str = "http://127.0.0.1:8091", timeout: float = 120.0) -> None:
@@ -137,19 +139,23 @@ class FakeBackend:
 
 
 def autodetect(prefer: Optional[str] = None) -> Optional[LlmClient]:
-    """환경변수 CXPE_LLM=geniex|rust|none 또는 자동 탐지. 살아 있는 백엔드를 돌려준다."""
+    """환경변수 CXPE_LLM=geniex|native|none 또는 자동 탐지. 살아 있는 백엔드를 돌려준다.
+
+    이전 표기 CXPE_LLM=rust 도 native 와 같게 받아들인다.
+    """
     prefer = (prefer or os.environ.get("CXPE_LLM") or "auto").lower()
     if prefer == "none":
         return None
     candidates: list[LlmClient] = []
     genie = GenieXBackend(os.environ.get("CXPE_GENIEX_URL", "http://127.0.0.1:18181"))
-    rust = RustBackend(os.environ.get("CXPE_RUST_URL", "http://127.0.0.1:8091"))
+    native = NativeBackend(os.environ.get("CXPE_NATIVE_URL",
+                                          os.environ.get("CXPE_RUST_URL", "http://127.0.0.1:8091")))
     if prefer == "geniex":
         candidates = [genie]
-    elif prefer == "rust":
-        candidates = [rust]
+    elif prefer in ("native", "rust"):
+        candidates = [native]
     else:
-        candidates = [genie, rust]
+        candidates = [genie, native]
     for c in candidates:
         if c.alive():
             return c

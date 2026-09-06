@@ -1,7 +1,7 @@
 [project]
 name = "cx-preflight-edge"
 version = "0.1.0"
-description = "폐쇄망 데이터센터 통합시운전 시험절차 사전검증 및 텔레메트리 근거화 (on-device, Qualcomm QCS9075)"
+description = "폐쇄망 데이터센터 통합시운전 시험절차 사전검증 및 텔레메트리 근거화 (on-device, Qualcomm IQ-9075 / QCS9075)"
 readme = "README.md"
 requires-python = ">=3.11"
 license = { text = "Apache-2.0" }

@@ -70,7 +70,7 @@ def cmd_extract(a: argparse.Namespace) -> None:
     from .metrics import extraction_f1
     client = autodetect(a.llm)
     if client is None:
-        print("LLM 백엔드를 찾지 못했다 (CXPE_LLM=geniex|rust, 보드에서 실행)")
+        print("LLM 백엔드를 찾지 못했다 (CXPE_LLM=geniex|native, 보드에서 실행)")
         sys.exit(1)
     md = Path(a.md).read_text(encoding="utf-8")
     golden = load_plan()
