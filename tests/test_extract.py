@@ -57,7 +57,7 @@ def test_extract_plan_with_fake_backend_matches_golden(golden):
 
 def test_extract_step_retries_then_succeeds(golden):
     fb = FakeBackend(responses=["garbage", golden_json_for(golden, "S3")])
-    step, stats = extract_step(fb, "S3", "CH-1 모의 트립", "### S3 ...")
+    step, stats = extract_step(fb, "S3", "CH-1 모의 트립", chunk_steps(MD)[2][2])
     assert step is not None and stats["attempts"] == 2 and stats["ok"]
     assert "invalid" in fb.calls[1][-2]["content"]
 

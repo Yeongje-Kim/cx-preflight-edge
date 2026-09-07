@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# 루프백만 있는 네트워크 네임스페이스에서 전체 세션을 돌린다.
+# 루프백만 있는 네임스페이스에서 LLM을 제외한 기준 규칙·판정·템플릿 기록 경로를 확인한다.
 # 외부로 나갈 인터페이스가 존재하지 않는 상태에서 사전검증 → 승인 → 판정 → 보고서가 끝나는지 본다.
 set -u
 cd "$HOME/cx-preflight-edge" || exit 1
@@ -18,6 +18,7 @@ export CXPE_LLM=none
 export CXPE_HOST=127.0.0.1 CXPE_PORT=8080
 .venv/bin/python -m uvicorn cxpe.server:app --host 127.0.0.1 --port 8080 --log-level warning &
 SRV=$!
+trap 'kill "$SRV" 2>/dev/null; wait "$SRV" 2>/dev/null' EXIT
 for _ in $(seq 1 40); do curl -sf -o /dev/null http://127.0.0.1:8080/api/v1/status && break; sleep 0.5; done
 
 echo "=== 폐쇄망 상태 ==="
@@ -32,13 +33,14 @@ curl -sf "http://127.0.0.1:8080/api/v1/sessions/$SID/preflight" | head -c 200; e
 curl -sf -X POST "http://127.0.0.1:8080/api/v1/sessions/$SID/approve" -H 'Content-Type: application/json' -d '{"approver":"engineer"}'; echo
 curl -sf -X POST "http://127.0.0.1:8080/api/v1/sessions/$SID/run" -H 'Content-Type: application/json' -d '{"speed":0}'; echo
 for _ in $(seq 1 60); do
-  S=$(curl -sf "http://127.0.0.1:8080/api/v1/sessions/$SID" | .venv/bin/python -c 'import sys,json; d=json.load(sys.stdin); print((d.get("meta",{}).get("summary") or {}).get("overall","-"))')
-  [ "$S" != "-" ] && break
+  ST=$(curl -sf "http://127.0.0.1:8080/api/v1/sessions/$SID" | .venv/bin/python -c 'import sys,json; d=json.load(sys.stdin); print((d.get("meta",{}).get("summary") or {}).get("status","-"))')
+  [[ "$ST" == "finished" || "$ST" == "error" ]] && break
   sleep 1
 done
+[[ "$ST" == "finished" ]] || { echo "세션 완료 실패: $ST"; exit 1; }
 echo "=== 종합 판정 ==="
-echo "$S"
-curl -sf -X POST "http://127.0.0.1:8080/api/v1/sessions/$SID/report" -H 'Content-Type: application/json' -d '{}' >/dev/null && echo "보고서 생성 OK"
+curl -sf "http://127.0.0.1:8080/api/v1/sessions/$SID" | .venv/bin/python -c 'import sys,json; d=json.load(sys.stdin); print(d["meta"]["summary"]["overall"]); assert d["meta"]["summary"]["overall"] == "HOLD" and d["has_report"]' || exit 1
+curl -sf -X POST "http://127.0.0.1:8080/api/v1/sessions/$SID/report" -H 'Content-Type: application/json' -d '{}' >/dev/null && echo "보고서 생성 OK" || exit 1
 
 echo "=== 세션 종료 시점 폐쇄망 상태 ==="
 curl -sf http://127.0.0.1:8080/api/v1/status

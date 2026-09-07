@@ -107,3 +107,171 @@ def test_llm_mode_without_backend_falls_back(client):
     sid = client.post("/api/v1/sessions", json={"case": "pass", "mode": "llm"}).json()["id"]
     d = client.get(f"/api/v1/sessions/{sid}").json()
     assert d["meta"]["backend"].startswith("golden")
+
+@pytest.mark.parametrize("force", [False, True])
+def test_semantic_source_mismatch_blocks_approval_even_force(client, force):
+    sid = client.post("/api/v1/sessions", json={"case": "pass", "mode": "golden"}).json()["id"]
+    st = server.app.state.cx
+    st.store.update_meta(sid, summary={"mode": "llm"})
+    plan = st.store.load_json(sid, "plan.json")
+    plan["steps"][1]["expected"][0].update(within_sec=10, hold_sec=30)
+    r = client.post(f"/api/v1/sessions/{sid}/approve", json={"plan": plan, "force": force})
+    assert r.status_code == 409 and "원문 대조 실패" in r.json()["detail"]
+    assert not st.store.has(sid, "rules.approved.json")
+
+
+def test_old_approved_bad_rules_cannot_be_replayed(client):
+    sid = client.post("/api/v1/sessions", json={"case": "pass", "mode": "golden"}).json()["id"]
+    assert client.post(f"/api/v1/sessions/{sid}/approve", json={}).status_code == 200
+    st = server.app.state.cx
+    st.store.update_meta(sid, summary={"mode": "llm"})
+    plan = st.store.load_json(sid, "rules.approved.json")
+    plan["steps"][1]["expected"][0].update(op=">", within_sec=10, hold_sec=30)
+    st.store.save_json(sid, "rules.approved.json", plan)
+    r = client.post(f"/api/v1/sessions/{sid}/run", json={"speed": 0})
+    assert r.status_code == 409 and "원문 대조 실패" in r.json()["detail"]
+
+
+def test_source_verified_ai_plan_passes_normal_telemetry(client):
+    sid = client.post("/api/v1/sessions", json={"case": "pass", "mode": "golden"}).json()["id"]
+    server.app.state.cx.store.update_meta(sid, summary={"mode": "llm"})
+    assert client.post(f"/api/v1/sessions/{sid}/approve", json={}).status_code == 200
+    assert client.post(f"/api/v1/sessions/{sid}/run", json={"speed": 0}).status_code == 200
+    assert wait_finished(client, sid)["meta"]["summary"]["overall"] == "PASS"
+
+
+def prepared_session(client, case="pass"):
+    sid = client.post("/api/v1/sessions", json={"case": case, "mode": "golden"}).json()["id"]
+    assert client.post(f"/api/v1/sessions/{sid}/approve", json={"approver": "original"}).status_code == 200
+    return sid
+
+
+def completed_session(client, case="pass"):
+    sid = prepared_session(client, case)
+    assert client.post(f"/api/v1/sessions/{sid}/run", json={"speed": 0}).status_code == 200
+    wait_finished(client, sid)
+    return sid
+
+
+def read_events(client, sid):
+    with client.stream("GET", f"/api/v1/sessions/{sid}/stream") as response:
+        return [json.loads(line[5:]) for line in response.iter_lines() if line.startswith("data:")]
+
+
+def test_completed_run_is_preserved_when_replay_requested(client):
+    sid = completed_session(client)
+    store = server.app.state.cx.store
+    names = ("telemetry.csv", "verdicts.jsonl", "rules.executed.json", "report.md")
+    before = {name: (store.path(sid) / name).read_bytes() for name in names}
+    response = client.post(f"/api/v1/sessions/{sid}/run", json={"speed": 0, "telemetry": "fail_start"})
+    assert response.status_code == 409
+    assert before == {name: (store.path(sid) / name).read_bytes() for name in names}
+    events = read_events(client, sid)
+    assert sum(e["type"] == "run_start" for e in events) == 1
+    assert sum(e["type"] == "done" for e in events) == 1
+
+
+@pytest.mark.parametrize("force", [False, True])
+def test_completed_reapproval_cannot_change_report(client, force):
+    sid = completed_session(client)
+    store = server.app.state.cx.store
+    before = store.load_text(sid, "report.md")
+    original = store.load_json(sid, "rules.approved.json")
+    changed = json.loads(json.dumps(original))
+    changed["steps"][0]["title"] = "Changed after execution"
+    response = client.post(f"/api/v1/sessions/{sid}/approve",
+                           json={"plan": changed, "approver": "replacement", "force": force})
+    assert response.status_code == 409
+    assert store.load_json(sid, "rules.approved.json") == original
+    assert store.read_meta(sid).summary["approved_by"] == "original"
+    assert client.post(f"/api/v1/sessions/{sid}/report").status_code == 200
+    assert store.load_text(sid, "report.md") == before
+
+
+def test_new_trial_has_its_own_results_and_stream(client):
+    first = completed_session(client)
+    second = completed_session(client, "fail_start")
+    assert first != second
+    for sid, expected in ((first, "PASS"), (second, "FAIL")):
+        events = read_events(client, sid)
+        assert next(e for e in events if e["type"] == "run_start")["session"] == sid
+        assert next(e for e in events if e["type"] == "run_done")["summary"]["overall"] == expected
+        assert any(e["type"] == "report" for e in events)
+        assert events[-1]["type"] == "done"
+        assert f"종합 판정: {expected}" in client.get(f"/api/v1/sessions/{sid}/report").text
+
+
+def test_simultaneous_run_requests_start_only_one_worker(client, monkeypatch):
+    import threading
+    from concurrent.futures import ThreadPoolExecutor
+    sid = prepared_session(client)
+    entered, release = threading.Event(), threading.Event()
+    original_replay = server.replay
+
+    def blocked_replay(*args, **kwargs):
+        entered.set()
+        assert release.wait(10)
+        yield from original_replay(*args, **kwargs)
+
+    monkeypatch.setattr(server, "replay", blocked_replay)
+    try:
+        with ThreadPoolExecutor(max_workers=2) as pool:
+            requests = [pool.submit(client.post, f"/api/v1/sessions/{sid}/run", json={"speed": 0}) for _ in range(2)]
+            assert sorted(r.result().status_code for r in requests) == [200, 409]
+        assert entered.wait(2)
+        assert client.post(f"/api/v1/sessions/{sid}/approve", json={"force": True}).status_code == 409
+        assert client.post(f"/api/v1/sessions/{sid}/report").status_code == 409
+        assert client.delete(f"/api/v1/sessions/{sid}").status_code == 409
+    finally:
+        release.set()
+        wait_finished(client, sid)
+
+
+def test_completed_session_stays_locked_after_server_restart(client):
+    sid = completed_session(client)
+    previous = server.app.state.cx
+    replacement = server.State()
+    replacement.store = SessionStore(previous.store.root)
+    replacement.llm, replacement.llm_checked = previous.llm, previous.llm_checked
+    server.app.state.cx = replacement
+    assert client.get(f"/api/v1/sessions/{sid}").json()["has_run"]
+    assert client.post(f"/api/v1/sessions/{sid}/run", json={"speed": 0}).status_code == 409
+    assert client.post(f"/api/v1/sessions/{sid}/approve", json={"force": True}).status_code == 409
+    assert client.post(f"/api/v1/sessions/{sid}/report").status_code == 200
+
+
+def test_report_uses_execution_snapshot_if_approval_file_changes(client):
+    sid = completed_session(client)
+    store = server.app.state.cx.store
+    original_facts = store.load_json(sid, "facts.json")
+    changed = store.load_json(sid, "rules.approved.json")
+    changed["steps"][0]["title"] = "Changed outside the application"
+    store.save_json(sid, "rules.approved.json", changed)
+    assert client.post(f"/api/v1/sessions/{sid}/report").status_code == 200
+    assert store.load_json(sid, "facts.json") == original_facts
+    assert "Changed outside the application" not in store.load_text(sid, "report.md")
+
+
+def test_legacy_execution_files_prevent_reapproval_and_rerun(client):
+    sid = completed_session(client)
+    store = server.app.state.cx.store
+    (store.path(sid) / "rules.executed.json").unlink()
+    store.update_meta(sid, summary={"status": "approved"})
+    assert client.post(f"/api/v1/sessions/{sid}/approve", json={"force": True}).status_code == 409
+    assert client.post(f"/api/v1/sessions/{sid}/run", json={"speed": 0}).status_code == 409
+    assert client.post(f"/api/v1/sessions/{sid}/report").status_code == 200
+
+
+def test_stream_delivers_events_published_just_after_subscription(client, monkeypatch):
+    sid = prepared_session(client)
+    bus = server.app.state.cx.bus(sid)
+    subscribe = bus.subscribe
+
+    def subscribe_at_completion():
+        result = subscribe()
+        for event in ({"type": "verdict", "state": "PASS"}, {"type": "report"}, {"type": "done"}):
+            bus.publish(event)
+        return result
+
+    monkeypatch.setattr(bus, "subscribe", subscribe_at_completion)
+    assert [e["type"] for e in read_events(client, sid)][-3:] == ["verdict", "report", "done"]

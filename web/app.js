@@ -2,9 +2,10 @@
 // 한 페이지 두 모드: body.mode-prep(세션·절차서·규칙·Preflight·승인·실행 버튼) / body.mode-run(모식도·차트·타임라인·실측 로그·판정).
 const API = "/api/v1";
 const $ = (id) => document.getElementById(id);
-const CHART_H = 300;
+const CHART_H = 240;
 
 const S = {
+  currentCase: null, currentTelemetry: null, approved: false, nError: 0, busy: false, ready: false,
   sid: null, cases: [], plan: null, steps: [], nSamples: 0, dt: 1,
   data: { t: [], temp: [], ch1: [], ch2: [], pump: [] }, exceeded: [], states: {}, tRun: {}, tArm: {}, verdicts: [],
   chart: null, es: null, now: 0, running: false, mode: "prep",
@@ -20,12 +21,14 @@ function setMode(m) {
   $("nav-run").hidden = !S.hasRun;
   if (m === "run" && S.chart) requestAnimationFrame(() => S.chart.setSize({ width: $("chart").clientWidth, height: CHART_H }));
   setModeBadge();
+  updateGuide();
 }
 
 function setModeBadge() {
+  updateGuide();
   const b = $("badge-mode");
   if (S.mode === "prep") { b.className = "mode prep"; b.textContent = "준비"; return; }
-  if (S.running) { b.className = "mode running"; b.textContent = "RUNNING"; return; }
+  if (S.running) { b.className = "mode running"; b.textContent = S.overall ? "기록 작성 중" : "RUNNING"; return; }
   if (S.overall) { b.className = `mode done ${S.overall}`; b.textContent = `완료 ${S.overall}`; return; }
   b.className = "mode run"; b.textContent = "실행";
 }
@@ -42,14 +45,15 @@ async function statusLoop() {
       const o = d.offline || {};
       const off = $("badge-offline");
       if (o.is_offline) { off.className = "badge ok"; off.textContent = "외부 통신 차단 확인"; }
-      else { off.className = "badge bad"; off.textContent = `외부 통신 가능 ${o.offline_score}/4 (DNS ${o.dns_blocked ? "차단" : "가능"}, TCP ${o.connect_blocked ? "차단" : "가능"}, 기본경로 ${o.default_route === false ? "없음" : o.default_route === true ? "있음" : "미확인"})`; }
+      else { off.className = "badge bad"; off.textContent = `외부 통신 차단 미확인 ${o.offline_score ?? "-"}/4`; }
+      $("network-detail").textContent = `네트워크 점검: DNS ${o.dns_blocked ? "차단" : "가능"}, TCP ${o.connect_blocked ? "차단" : "가능"}, 기본경로 ${o.default_route === false ? "없음" : o.default_route === true ? "있음" : "미확인"}`;
       const llm = $("badge-llm");
-      if (d.llm && d.llm.alive) { llm.className = "badge ok"; llm.textContent = `LLM ${d.llm.backend} on-device`; }
-      else { llm.className = "badge unknown"; llm.textContent = "LLM 없음, 골든/템플릿 폴백"; }
+      if (d.llm && d.llm.alive) { llm.className = "badge ok"; llm.textContent = `온디바이스 AI 연결됨`; }
+      else { llm.className = "badge unknown"; llm.textContent = "AI 미연결 · 기준 문서 사용"; }
       if (!S.running) $("badge-lat").textContent = `판정 지연 ${d.last_latency_ms == null ? "-" : d.last_latency_ms.toFixed(3) + " ms"}`;
       $("badge-mem").textContent = `RAM ${o.mem_used_mb ?? "-"}/${o.mem_total_mb ?? "-"} MB${o.cpu_load1 != null ? `  load ${o.cpu_load1.toFixed(2)}` : ""}`;
       if (!S.cases.length && d.cases) { S.cases = d.cases; fillCases(d); }
-    } catch (e) { $("badge-offline").className = "badge unknown"; }
+    } catch (e) { $("badge-offline").className = "badge unknown"; $("badge-offline").textContent = "서버 연결 확인 필요"; $("badge-llm").textContent = "AI 상태 미확인"; }
     await new Promise((r) => setTimeout(r, 2000));
   }
 }
@@ -57,20 +61,32 @@ async function statusLoop() {
 function fillCases(d) {
   const sel = $("sel-case");
   sel.innerHTML = "";
-  for (const c of d.cases) { const o = document.createElement("option"); o.value = c.name; o.textContent = `${c.name}: ${c.desc}`; sel.appendChild(o); }
+  for (const c of d.cases) { const o = document.createElement("option"); o.value = c.name; o.textContent = caseLabel(c.name); sel.appendChild(o); }
   const tel = $("sel-tel");
   tel.innerHTML = "";
-  for (const t of d.telemetry_cases) { const o = document.createElement("option"); o.value = t; o.textContent = t; tel.appendChild(o); }
+  for (const t of d.telemetry_cases) { const o = document.createElement("option"); o.value = t; o.textContent = caseLabel(t); tel.appendChild(o); }
   sel.onchange = () => { const c = S.cases.find((x) => x.name === sel.value); $("case-desc").textContent = c ? c.desc : ""; tel.value = c ? c.telemetry : "pass"; };
+  if (S.currentCase) sel.value = S.currentCase;
   sel.onchange();
+  if (S.currentTelemetry) tel.value = S.currentTelemetry;
 }
 
 // ---------------------------------------------------------------- session
 async function createSession() {
   const body = { case: $("sel-case").value, mode: $("sel-mode").value };
+  S.currentCase = body.case; S.currentTelemetry = $("sel-tel").value;
+  S.ready = false; S.approved = false; S.plan = null; S.steps = []; S.hasRun = false; S.sid = null;
+  $("reviewed").checked = false; $("force").checked = false;
+  $("s-rules").open = false; $("s-report").open = false;
+  $("rules-table").querySelector("tbody").innerHTML = "";
+  $("pf-rule").textContent = "사전검증 준비 중…"; $("pf-ai").textContent = "";
+  $("approve-status").textContent = ""; $("pf-summary").textContent = "";
+  $("btn-approve").disabled = true; $("btn-run").disabled = true; $("btn-report").disabled = true;
   $("btn-create").disabled = true;
   resetRun();
-  const meta = await (await fetch(`${API}/sessions`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) })).json();
+  const response = await fetch(`${API}/sessions`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
+  const meta = await response.json();
+  if (!response.ok) throw new Error(meta.detail || "사전검증 시작 실패");
   S.sid = meta.id;
   $("session-id").textContent = meta.id;
   $("plan-md").textContent = await (await fetch(`${API}/sessions/${S.sid}/plan_md`)).text();
@@ -85,18 +101,27 @@ async function waitPlanReady() {
     if (pf.status === "ready") {
       const d = await (await fetch(`${API}/sessions/${S.sid}`)).json();
       S.plan = d.plan; S.steps = d.plan.steps.map((s) => s.id);
-      $("rules-backend").textContent = `출처 ${d.meta.backend}` + (d.meta.timings && d.meta.timings.extract_sec ? `, 추출 ${d.meta.timings.extract_sec.toFixed(1)}s` : "");
+      $("rules-backend").textContent = `출처 ${d.meta.case === "preflight_warn" ? "결함 주입 시연 규칙 (AI 추출 결과 아님)" : d.meta.backend}` + (d.meta.timings && d.meta.timings.extract_sec ? `, 추출 ${d.meta.timings.extract_sec.toFixed(1)}s` : "");
       $("extract-status").textContent = d.meta.summary && d.meta.summary.note ? d.meta.summary.note : (d.meta.backend.startsWith("golden") ? "승인본(골든) 규칙" : `LLM 추출 완료 (${d.meta.summary.extract ? d.meta.summary.extract.n_ok + "/" + d.meta.summary.extract.n_total + " 단계" : ""})`);
+      const extract = d.meta.summary?.extract;
+      if (extract?.source_check && d.meta.case !== "preflight_warn") {
+        $("extract-status").textContent += ` · AI 원문 수치 대조 ${extract.n_source_verified}/${extract.n_total}단계 · 기준본 대체 ${(extract.fallback_ids || []).length}단계`;
+      }
+      if (!d.meta.backend.startsWith("golden") && d.meta.case !== "preflight_warn") {
+        $("extract-status").textContent += " · AI 추출 초안: 허용시간·유지시간·비교 연산자를 원문과 대조하세요. 사전검증 통과가 추출 정확성을 보장하지 않습니다.";
+        $("s-rules").open = true; $("s-plan").open = true;
+      }
       renderRules(d.plan);
       $("approve-status").textContent = "";
       renderPreflight(pf);
       renderTimeline();
-      $("btn-approve").disabled = false;
+      S.ready = true; updateGuide();
       $("btn-run").disabled = true;
       return;
     }
     await new Promise((r) => setTimeout(r, 1000));
   }
+  throw new Error("구조화 대기 시간이 초과되었습니다. 서버 상태를 확인하고 다시 시작하세요.");
 }
 
 function condText(c) { return c.op === "in_band" ? `${c.tag} ∈ [${c.band[0]}, ${c.band[1]}]` : `${c.tag} ${c.op} ${c.value}`; }
@@ -117,7 +142,7 @@ function renderRules(plan) {
   tb.innerHTML = "";
   for (const s of plan.steps) {
     const tr = document.createElement("tr");
-    const exp = s.expected.map((e) => `${condText(e)} (${e.within_sec}/${e.hold_sec})`).join("<br>") || '<span class="dim">없음</span>';
+    const exp = s.expected.map((e) => `${condText(e)}<br><span class="dim">허용 ${e.within_sec}초 이내 · ${e.hold_sec}초 유지</span>`).join("<br>") || '<span class="dim">없음</span>';
     tr.innerHTML = `<td class="step"><b class="mono">${s.id}</b><br><span class="dim">${s.title}</span></td>
       <td>${s.preconditions.map(condText).join("<br>") || '<span class="dim">없음</span>'}</td>
       <td>${s.trigger ? condText(s.trigger) : '<span class="dim">없음</span>'}</td>
@@ -130,6 +155,7 @@ function renderRules(plan) {
 }
 
 function renderPreflight(pf) {
+  S.nError = pf.n_error ?? (pf.rule || []).filter(f => f.severity === "ERROR").length;
   const ul = $("pf-rule"); ul.innerHTML = "";
   if (!pf.rule.length) { const li = document.createElement("li"); li.className = "empty"; li.textContent = "결함 없음: 6개 검사 통과 (사전조건, 순서, 기대결과, 태그, 복구, 기준값)"; ul.appendChild(li); }
   for (const f of pf.rule) { const li = document.createElement("li"); li.className = f.severity; li.innerHTML = `<span class="code">${f.code}</span>${f.message}`; ul.appendChild(li); }
@@ -137,7 +163,7 @@ function renderPreflight(pf) {
   $("pf-summary").style.color = pf.n_error ? "var(--bad)" : (pf.n_warn ? "var(--warn)" : "var(--ok)");
   // ERROR가 있으면 승인 게이트가 닫힌 상태임을 미리 보여준다 (서버가 승인 요청을 거부한다)
   if (pf.n_error && !$("approve-status").textContent.startsWith("승인됨")) {
-    $("approve-status").textContent = `승인 차단: ERROR ${pf.n_error}건. 절차서를 수정해 재검증하거나 강제 승인 사유를 남겨야 합니다`;
+    $("approve-status").textContent = `승인 차단: ERROR ${pf.n_error}건. 절차서를 수정한 뒤 다시 검증하세요`;
     $("approve-status").style.color = "var(--bad)";
   }
   const ai = $("pf-ai"); ai.innerHTML = "";
@@ -152,6 +178,7 @@ async function approve() {
   if (!r.ok) { $("approve-status").textContent = d.detail || "승인 실패"; $("approve-status").style.color = "var(--bad)"; return; }
   $("approve-status").textContent = `승인됨, ${d.approver}, ${new Date().toLocaleTimeString()}${d.n_error ? `, ERROR ${d.n_error}건 강제` : ""}`;
   $("approve-status").style.color = d.n_error ? "var(--warn)" : "var(--ok)";
+  S.approved = true; updateGuide();
   $("btn-run").disabled = false;
 }
 
@@ -169,17 +196,28 @@ function resetRun() {
   setElapsed(); setModeBadge();
 }
 
+function connectRunStream(sid) {
+  const es = new EventSource(`${API}/sessions/${sid}/stream`);
+  S.es = es;
+  es.onmessage = (m) => { if (S.sid === sid && S.es === es) handleEvent(JSON.parse(m.data)); };
+  es.onerror = () => {
+    if (S.sid !== sid || S.es !== es) return;
+    $("ui-error").textContent = "시험 데이터 연결이 끊겼습니다. 자동 재연결 중입니다. 연결이 복구되지 않으면 시험 이력에서 결과를 확인하세요.";
+    $("ui-error").hidden = false;
+  };
+}
+
 async function run() {
-  resetRun();
+  if (S.hasRun) throw new Error("기존 시험은 이력에 보관됩니다. 새 시험을 준비하세요");
+  const sid = S.sid;
   const speed = parseFloat($("sel-speed").value);
-  $("btn-run").disabled = true;
-  S.hasRun = true;
-  S.es = new EventSource(`${API}/sessions/${S.sid}/stream`);
-  S.es.onmessage = (m) => handleEvent(JSON.parse(m.data));
-  S.es.onerror = () => { $("run-status").textContent += " (stream 끊김)"; };
-  const r = await fetch(`${API}/sessions/${S.sid}/run`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ telemetry: $("sel-tel").value, speed }) });
-  if (!r.ok) { $("run-status").textContent = (await r.json()).detail; $("btn-run").disabled = false; return; }
+  const r = await fetch(`${API}/sessions/${sid}/run`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ telemetry: $("sel-tel").value, speed }) });
+  if (!r.ok) throw new Error((await r.json()).detail || "재생 요청 실패");
+  resetRun();
+  S.hasRun = true; S.running = true;
   setMode("run");
+  // 서버가 실행을 수락한 뒤 연결한다. 먼저 발생한 이벤트는 백로그로 받는다.
+  connectRunStream(sid);
 }
 
 function handleEvent(ev) {
@@ -220,32 +258,44 @@ function handleEvent(ev) {
       if (ev.kind === "exceeded") { S.exceeded.push(ev); updateChart(); renderTimeline(); const cur = S.verdicts.find((x) => x.step_id === ev.step_id && x.state !== "SKIPPED"); if (cur) setVerdictCard(cur); }
       break;
     case "run_done":
-      S.running = false; S.overall = ev.summary.overall; updateChart(); renderTimeline(); renderLiveExpect(); setModeBadge();
+      S.overall = ev.summary.overall; updateChart(); renderTimeline(); renderLiveExpect(); setModeBadge();
       setStats(ev.summary, ev.timings.run_wall_sec);
       $("run-status").textContent += `  완료  외부 전송 ${ev.offline.tx_delta_bytes == null ? "미측정" : ev.offline.tx_delta_bytes + " B"}`;
       $("report").textContent = "보고서 생성 중 (온디바이스 LLM 종합 의견)";
       break;
     case "report":
-      loadReport(ev);
+      loadReport(ev).catch(e => { if (S.sid === ev.session) { $("ui-error").textContent = e.message; $("ui-error").hidden = false; } });
       break;
     case "error":
+      $("ui-error").textContent = "시험 처리 오류: " + ev.message; $("ui-error").hidden = false;
       $("run-status").textContent = "오류: " + ev.message; break;
     case "done":
+      S.running = false; updateGuide();
       if (S.es) { S.es.close(); S.es = null; }
-      $("btn-run").disabled = false; $("btn-report").disabled = false;
+      $("btn-report").disabled = !S.overall;
+      setModeBadge();
       break;
   }
 }
 
 async function loadReport(ev) {
-  $("report").textContent = await (await fetch(`${API}/sessions/${S.sid}/report`, { cache: "no-store" })).text();
+  const sid = S.sid;
+  const response = await fetch(`${API}/sessions/${sid}/report`, { cache: "no-store" });
+  const text = await response.text();
+  if (S.sid !== sid) return;
+  if (!response.ok) throw new Error("시험 기록을 불러오지 못했습니다");
+  $("report").textContent = text;
   $("report-meta").textContent = `문안 출처 ${ev.source}, ${(ev.sec || 0).toFixed(1)}s`;
 }
 
 async function regenReport() {
   $("btn-report").disabled = true; $("report").textContent = "재생성 중";
-  const d = await (await fetch(`${API}/sessions/${S.sid}/report`, { method: "POST" })).json();
-  await loadReport(d); $("btn-report").disabled = false;
+  try {
+    const response = await fetch(`${API}/sessions/${S.sid}/report`, { method: "POST" });
+    const d = await response.json();
+    if (!response.ok) throw new Error(d.detail || "기록 재생성 실패");
+    await loadReport(d);
+  } finally { $("btn-report").disabled = false; }
 }
 
 function setStats(sm, wall) {
@@ -317,6 +367,7 @@ function renderLiveExpect() {
   const s = S.plan && id ? S.plan.steps.find((x) => x.id === id) : null;
   if (!s) { el.innerHTML = '<div class="dim small">실행이 시작되면 진행 중인 단계의 기대조건별 실측값이 표시됩니다.</div>'; $("live-step").textContent = ""; $("live-state").textContent = ""; return; }
   const st = S.states[id] || "PENDING";
+  el.classList.toggle("waiting-conditions", ["ARMED", "PENDING"].includes(st));
   const fz = S.frozen[id];
   const vals = fz ? fz.vals : (S.lastVals || {});
   const tNow = fz ? fz.t : S.now;
@@ -344,7 +395,7 @@ function renderLiveExpect() {
       else if (st === "ABORT") { cls = "bad"; label = "중단"; }
     }
     const showTime = kind !== "abort" && elapsed != null;
-    rows.push(`<div class="lv-row ${cls}"><span class="lv-kind">${KIND[kind]}</span><span class="lv-tag mono">${c.tag}</span><span class="lv-crit mono">${critText(c)}</span><span class="lv-val mono">실측 ${v == null ? "-" : (typeof v === "number" ? (Number.isInteger(v) ? v : v.toFixed(1)) : v)}</span><span class="lv-time mono">${showTime ? `경과 ${elapsed.toFixed(0)}s${allowed != null ? ` / 허용 ${allowed}s` : ""}` : ""}</span><span class="lv-st">${label}</span></div>`);
+    rows.push(`<div class="lv-row ${cls}" data-kind="${kind}"><span class="lv-kind">${KIND[kind]}</span><span class="lv-tag mono">${c.tag}</span><span class="lv-crit mono">${critText(c)}</span><span class="lv-val mono">실측 ${v == null ? "-" : (typeof v === "number" ? (Number.isInteger(v) ? v : v.toFixed(1)) : v)}</span><span class="lv-time mono">${showTime ? `경과 ${elapsed.toFixed(0)}s${allowed != null ? ` / 허용 ${allowed}s` : ""}` : ""}</span><span class="lv-st">${label}</span></div>`);
   };
   const tr = S.tRun[id];
   const armedOnly = !tr || tr.armed;
@@ -523,15 +574,23 @@ async function loadExisting(sid) {
   if (!d.meta) return;
   resetRun();
   S.sid = sid; $("session-id").textContent = sid;
+  S.currentCase = d.meta.case; S.currentTelemetry = d.meta.summary?.telemetry || "pass";
+  if (S.cases.length) { $("sel-case").value = S.currentCase; $("sel-case").onchange(); $("sel-tel").value = S.currentTelemetry; }
   $("plan-md").textContent = await (await fetch(`${API}/sessions/${sid}/plan_md`)).text();
-  S.plan = d.plan; S.steps = d.plan.steps.map((s) => s.id);
-  $("rules-backend").textContent = `출처: ${d.meta.backend}`;
+  if (!d.plan) { await waitPlanReady(); return; }
+  S.plan = d.executed || d.approved || d.plan; S.steps = S.plan.steps.map((s) => s.id);
+  S.hasRun = !!d.has_run || !!d.has_telemetry;
+  $("rules-backend").textContent = `출처: ${d.meta.case === "preflight_warn" ? "결함 주입 시연 규칙 (AI 추출 결과 아님)" : d.meta.backend}`;
   $("extract-status").textContent = `저장된 세션 (${d.meta.case})`;
-  renderRules(d.plan);
+  renderRules(S.plan);
   $("approve-status").textContent = "";
   renderPreflight({ status: "ready", ...(d.preflight || { rule: [], ai: [] }) });
-  $("btn-approve").disabled = false;
-  if (d.approved) { $("approve-status").textContent = `승인됨, ${d.meta.summary.approved_by || ""}`; $("approve-status").style.color = "var(--ok)"; $("btn-run").disabled = false; }
+  S.ready = true; S.approved = !!d.approved; $("reviewed").checked = !!d.approved; updateGuide();
+  if (d.approved) { $("approve-status").textContent = `승인됨, ${d.meta.summary.approved_by || ""}`; $("approve-status").style.color = "var(--ok)"; }
+  if (["running", "reporting"].includes(d.meta.summary?.status)) {
+    S.running = true; S.overall = d.meta.summary.overall || null;
+    setMode("run"); connectRunStream(sid); return;
+  }
   if (d.has_telemetry) {
     const tel = await (await fetch(`${API}/sessions/${sid}/telemetry`)).json();
     S.nSamples = tel.rows.length;
@@ -557,11 +616,53 @@ async function loadExisting(sid) {
   }
 }
 
+// ---------------------------------------------------------------- guided review and recoverable actions
+function caseLabel(name) {
+  return ({preflight_warn: "절차 결함 발견 · 승인 차단", pass: "정상 전환 · 합격", fail_start: "대기기 기동 지연 · 불합격", fail_temp: "온도 회복 지연 · 불합격", fail_dropout: "계측 결측 · 판정 보류", no_start: "기동 없음"})[name] || name;
+}
+function updateGuide() {
+  const stage = S.mode === "run" ? "run" : S.ready ? "approve" : "prep";
+  for (const key of ["prep", "approve", "run"]) {
+    if (key === stage) $("flow-" + key).setAttribute("aria-current", "step");
+    else $("flow-" + key).removeAttribute("aria-current");
+  }
+  $("btn-approve").disabled = !S.ready || S.busy || S.running || S.hasRun || S.approved || !$("reviewed").checked || (S.nError > 0 && !$("force").checked);
+  $("btn-create").disabled = S.busy || S.running;
+  $("btn-run").disabled = !S.approved || S.busy || S.running || S.hasRun;
+  $("btn-create").textContent = S.hasRun ? "새 시험 준비" : "사전검증 시작";
+  $("sel-case").disabled = S.busy || S.running;
+  $("sel-mode").disabled = S.busy || S.running;
+  $("sel-tel").disabled = S.busy || S.running;
+  $("sel-speed").disabled = S.busy || S.running;
+  let next = "시연할 상황을 선택한 뒤 사전검증을 시작하세요.";
+  if (S.busy) next = "요청을 처리하고 있습니다. 완료되면 다음 단계가 열립니다.";
+  else if (S.running) next = S.overall ? "판정을 마쳤습니다. 시험 기록 초안을 작성하고 있습니다." : "승인된 규칙으로 합성 시계열을 판정 중입니다.";
+  else if (S.hasRun) next = S.mode === "run" ? "판정 결과와 시험 기록을 확인하세요. 재시험은 준비 화면의 새 시험 준비에서 시작합니다." : "새 시험 준비로 별도 시험을 시작하세요. 이전 승인 규칙과 결과는 이력에 보관됩니다.";
+  else if (S.approved) next = "승인 완료. 시험을 재생해 승인한 기준과 관측값을 대조하세요.";
+  else if (S.ready) next = S.nError ? `오류 ${S.nError}건으로 승인이 차단됐습니다. 판정 규칙에서 결함을 확인하세요.` : "판정 규칙을 펼쳐 검토한 뒤, 검토 확인에 체크하고 승인하세요.";
+  $("next-action").textContent = next;
+  $("page-heading").textContent = S.mode === "run" ? (S.running ? "승인한 규칙으로 시험을 확인하고 있습니다" : "시험 결과와 판단 근거를 확인하세요") : "시험 전에 절차의 빈틈을 확인하세요";
+  $("page-description").textContent = S.mode === "run" ? "규칙 엔진이 판정하고, 엔지니어가 최종 판단합니다. AI는 기록 초안을 보조합니다." : "절차 검토부터 시험 기록까지, 엔지니어가 승인한 같은 규칙으로 연결합니다.";
+}
+async function withFeedback(action) {
+  if (S.busy) return;
+  S.busy = true; $("ui-error").hidden = true; updateGuide();
+  try { await action(); }
+  catch (e) {
+    $("ui-error").textContent = `처리하지 못했습니다: ${e.message}. 연결 상태를 확인하고 다시 시도하세요.`;
+    $("ui-error").hidden = false;
+    if (action === run) { S.running = false; if (S.es) { S.es.close(); S.es = null; } }
+  } finally { S.busy = false; updateGuide(); }
+}
+
 // ---------------------------------------------------------------- boot
-$("btn-create").onclick = createSession;
-$("btn-approve").onclick = approve;
-$("btn-run").onclick = run;
-$("btn-report").onclick = regenReport;
+$("btn-create").onclick = () => withFeedback(createSession);
+$("btn-approve").onclick = () => withFeedback(approve);
+$("btn-run").onclick = () => withFeedback(run);
+$("btn-report").onclick = () => withFeedback(regenReport);
+$("reviewed").onchange = updateGuide;
+$("force").onchange = updateGuide;
+$("show-conditions").onchange = (e) => $("s-live").classList.toggle("all-conditions", e.target.checked);
 $("btn-toggle-md").onclick = () => $("plan-md").classList.toggle("collapsed");
 $("nav-prep").onclick = (e) => { e.preventDefault(); setMode("prep"); };
 $("nav-run").onclick = (e) => { e.preventDefault(); setMode("run"); };
@@ -571,5 +672,5 @@ setMode("prep");
 statusLoop();
 {
   const q = new URLSearchParams(location.search).get("session");
-  if (q) loadExisting(q);
+  if (q) withFeedback(() => loadExisting(q));
 }

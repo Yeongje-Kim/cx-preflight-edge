@@ -1,0 +1,25 @@
+{
+  "state": {
+    "sid": "cx-20260906-230844-e10a",
+    "overall": "PASS"
+  },
+  "backend": "geniex-18181",
+  "extraction": {
+    "backend": "geniex-18181",
+    "fallback_ids": [],
+    "source_check": "tagged-procedure-v1",
+    "n_source_verified": 8,
+    "n_ok": 8,
+    "n_total": 8,
+    "sec_total": 84.48804002000543
+  },
+  "timings": {
+    "extract_sec": 84.4898049149997,
+    "run_wall_sec": 0.11226692799391458,
+    "latency_ms_max": 0.11932699999306351,
+    "report_sec": 8.448421346001851,
+    "report_llm_sec": 8.446625099997618
+  },
+  "reportSource": "geniex-18181",
+  "errors": []
+}

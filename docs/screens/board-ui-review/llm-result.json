@@ -1,0 +1,23 @@
+{
+  "state": {
+    "sid": "cx-20260906-225547-b973",
+    "overall": "FAIL"
+  },
+  "backend": "geniex-18181",
+  "extraction": {
+    "backend": "geniex-18181",
+    "fallback_ids": [],
+    "n_ok": 8,
+    "n_total": 8,
+    "sec_total": 73.93127907798771
+  },
+  "timings": {
+    "extract_sec": 73.93271944700246,
+    "run_wall_sec": 0.06737380599952303,
+    "latency_ms_max": 0.12458400306059048,
+    "report_sec": 11.491917687999376,
+    "report_llm_sec": 11.49064174600062
+  },
+  "reportSource": "geniex-18181",
+  "errors": []
+}

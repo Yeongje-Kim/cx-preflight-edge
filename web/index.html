@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Cx-Preflight Edge</title>
   <link rel="stylesheet" href="/static/uplot.min.css" />
-  <link rel="stylesheet" href="/static/style.css?v=3" />
+  <link rel="stylesheet" href="/static/style.css?v=4" />
 </head>
 <body class="mode-prep">
   <header>
@@ -15,74 +15,91 @@
     <span class="spacer"></span>
     <span id="badge-offline" class="badge unknown">외부 통신 확인 중</span>
     <span id="badge-llm" class="badge unknown">LLM 확인 중</span>
+    <details class="runtime"><summary>장치 상세</summary><div class="runtime-content"><span id="network-detail" class="small"></span>
     <span id="badge-lat" class="badge dim">판정 지연 -</span>
     <span id="badge-mem" class="badge dim">RAM -</span>
+    </div></details>
     <span id="badge-t" class="badge dim only-run">t 0 / 0 s</span>
     <a id="nav-prep" class="nav only-run" href="#">준비 화면으로</a>
     <a id="nav-run" class="nav only-prep" href="#" hidden>실행 화면으로</a>
-    <a class="nav" href="/history">히스토리</a>
+    <a class="nav" href="/history">시험 이력</a>
   </header>
 
   <main>
+    <div class="page-intro">
+      <div><p class="context-label">시공·품질관리 / 냉동기 N+1 통합시운전</p>
+      <h1 id="page-heading">시험 전에 절차의 빈틈을 확인하세요</h1>
+      <p id="page-description">절차 검토부터 시험 기록까지, 엔지니어가 승인한 같은 규칙으로 연결합니다.</p></div>
+      <span class="scope-note">합성 데이터 시연 · 설비 제어 없음</span>
+    </div>
+    <ol class="workflow" aria-label="시험 진행 순서">
+      <li id="flow-prep" aria-current="step"><b>1</b><span>절차 사전검증<small>누락·모순 확인</small></span></li>
+      <li id="flow-approve"><b>2</b><span>엔지니어 승인<small>판정 기준 확정</small></span></li>
+      <li id="flow-run"><b>3</b><span>시험 판정과 기록<small>근거 확인·초안 검토</small></span></li>
+    </ol>
+    <div id="ui-error" role="alert" hidden></div>
+    <p id="next-action" class="next-action" role="status">시연할 상황을 선택한 뒤 사전검증을 시작하세요.</p>
     <!-- ================================================================ 준비 모드 -->
     <section class="prep" id="prep">
       <div class="col">
         <div class="card" id="s-create">
-          <div class="card-head"><span>세션</span><span id="session-id" class="mono dim"></span></div>
+          <div class="card-head"><span>검토할 시험 선택</span><span id="session-id" class="mono dim"></span></div>
           <div class="row">
-            <label>데모 케이스 <select id="sel-case"></select></label>
+            <label>시연 상황 <select id="sel-case"></select></label>
             <label>절차서 구조화 <select id="sel-mode">
-              <option value="golden">승인본(골든) 사용</option>
+              <option value="golden">기준 문서 불러오기 (AI 미사용)</option>
               <option value="llm">온디바이스 LLM 추출</option>
             </select></label>
-            <button id="btn-create" class="primary">세션 생성</button>
+            <button id="btn-create" class="primary">사전검증 시작</button>
           </div>
           <div id="case-desc" class="dim small"></div>
           <div id="extract-status" class="small"></div>
         </div>
 
-        <div class="card" id="s-plan">
+        <details class="card" id="s-plan"><summary>시험절차서 원문 보기</summary><div class="detail-body">
           <div class="card-head"><span>시험절차서 원문</span><button id="btn-toggle-md" class="link">접기/펼치기</button></div>
-          <pre id="plan-md" class="doc">세션을 생성하면 절차서 원문이 표시됩니다.</pre>
-        </div>
+          <pre id="plan-md" class="doc">사전검증을 시작하면 절차서 원문이 표시됩니다.</pre>
+        </div></details>
 
-        <div class="card" id="s-rules">
-          <div class="card-head"><span>구조화 규칙 (AI 추출, 엔지니어 승인 대상)</span><span id="rules-backend" class="dim small"></span></div>
+        <details class="card" id="s-rules"><summary>판정 규칙 검토 <span class="dim small">사전조건·허용시간·중단·복구</span></summary><div class="detail-body">
+          <div class="card-head"><span>판정에 사용할 규칙 (출처 확인 후 승인)</span><span id="rules-backend" class="dim small"></span></div>
           <div class="table-wrap">
             <table id="rules-table">
-              <thead><tr><th>단계</th><th>사전조건</th><th>트리거</th><th>기대 결과 (허용/유지 s)</th><th>중단</th><th>복구</th><th>상태변경</th></tr></thead>
+              <thead><tr><th>단계</th><th>사전조건</th><th>트리거</th><th>기대 결과 · 허용시간 · 유지시간</th><th>중단</th><th>복구</th><th>상태변경</th></tr></thead>
               <tbody></tbody>
             </table>
           </div>
-        </div>
+        </div></details>
       </div>
 
       <div class="col">
         <div class="card" id="s-preflight">
           <div class="card-head"><span>Preflight 사전검증</span><span id="pf-summary" class="small"></span></div>
-          <ul id="pf-rule" class="findings"></ul>
-          <div class="dim small" id="pf-ai-head">AI 제안 (규칙에 자동 반영되지 않음)</div>
-          <ul id="pf-ai" class="findings ai"></ul>
+          <ul id="pf-rule" class="findings"><li class="dim">사전검증을 시작하면 절차의 누락과 모순을 확인합니다.</li></ul>
+          <details class="secondary-details"><summary>AI 보조 검토</summary><div class="dim small" id="pf-ai-head">AI 제안 (규칙에 자동 반영되지 않음)</div>
+          <ul id="pf-ai" class="findings ai"></ul></details>
         </div>
 
         <div class="card" id="s-approve">
           <div class="card-head"><span>규칙 승인 (엔지니어)</span><span id="approve-status" class="small"></span></div>
           <div class="row">
             <label>승인자 <input id="approver" value="commissioning engineer" /></label>
-            <label class="small"><input type="checkbox" id="force" /> ERROR 있어도 강제 승인</label>
-            <button id="btn-approve" class="primary" disabled>승인</button>
+
+            <button id="btn-approve" class="primary" disabled>규칙 승인</button>
           </div>
+          <label class="review-check"><input type="checkbox" id="reviewed" /> 판정 규칙과 경고를 검토했습니다</label>
+          <details class="secondary-details"><summary>예외 승인 설정</summary><label class="small"><input type="checkbox" id="force" /> 오류를 포함해 예외 승인 (승인 이력에 기록)</label></details>
           <div class="dim small">승인된 규칙이 그대로 시험 중 판정 기준이 됩니다. AI는 판정하지 않습니다.</div>
         </div>
 
         <div class="card" id="s-run">
-          <div class="card-head"><span>시험 실행 (합성 SIL 텔레메트리 재생)</span></div>
+          <div class="card-head"><span>승인된 규칙으로 시험 재생</span></div>
           <div class="row">
             <label>텔레메트리 <select id="sel-tel"></select></label>
             <label>배속 <select id="sel-speed">
               <option value="1">1x</option><option value="5" selected>5x</option><option value="20">20x</option><option value="0">즉시</option>
             </select></label>
-            <button id="btn-run" class="primary" disabled>실행</button>
+            <button id="btn-run" class="primary" disabled>시험 재생</button>
           </div>
           <div class="dim small">기능검증용 합성 데이터와 임의 기준값입니다. 실제 적용 시 승인 시험계획서 기준을 사용합니다.</div>
         </div>
@@ -165,25 +182,26 @@
 
       <!-- 실측 로그 -->
       <div class="card area-live" id="s-live">
-        <div class="card-head"><span>실측 로그 <span id="live-step" class="dim"></span></span><span id="live-state" class="small mono"></span></div>
+        <div class="card-head"><span>판정 근거 <span id="live-step" class="dim"></span></span><span id="live-state" class="small mono"></span></div>
         <div id="live-action" class="lv-action"></div>
+        <label class="small"><input type="checkbox" id="show-conditions" /> 사전·중단 조건도 보기</label>
         <div id="live-expect" class="live">
-          <div class="dim small">실행이 시작되면 진행 중인 단계의 기대조건별 실측값이 표시됩니다.</div>
+          <div class="dim small">실행이 시작되면 진행 중인 단계의 기대조건별 관측값이 표시됩니다.</div>
         </div>
       </div>
 
       <!-- 텔레메트리 차트 -->
       <div class="card area-chart" id="s-chart">
         <div class="card-head"><span>텔레메트리</span><span class="legend small">
-          <i class="sw temp"></i>CHWS_T_SUP &nbsp; <i class="sw band"></i>허용 band 6~8 &nbsp; <i class="sw abort"></i>중단 14 &nbsp; <i class="sw ex"></i>허용시간 초과 &nbsp; <i class="sw dl"></i>마감 &nbsp;
+          <i class="sw temp"></i>공급온도 &nbsp; <i class="sw band"></i>허용 6~8°C &nbsp; <i class="sw abort"></i>중단 14 &nbsp; <i class="sw ex"></i>허용시간 초과 &nbsp; <i class="sw dl"></i>마감 &nbsp;
           <i class="sw ch1"></i>CH1 &nbsp; <i class="sw ch2"></i>CH2 &nbsp; <i class="sw pump"></i>CHWP2</span></div>
         <div id="chart"></div>
       </div>
 
       <!-- 판정 카드 -->
       <div class="card area-verdict" id="s-verdict">
-        <div class="card-head"><span>판정 (규칙 엔진)</span><span id="verdict-count" class="small"></span></div>
-        <div id="verdict-card" class="verdict unknown">
+        <div class="card-head"><span>시험 판정 결과</span><span id="verdict-count" class="small"></span></div>
+        <div id="verdict-card" class="verdict unknown" role="status">
           <div class="vstate">-</div>
           <div class="vbody">
             <div class="vstep"></div>
@@ -195,27 +213,27 @@
       </div>
 
       <!-- 단계 타임라인 -->
-      <div class="card area-timeline" id="s-timeline">
+      <details class="card area-timeline" id="s-timeline"><summary>전체 8단계 타임라인</summary><div class="detail-body">
         <div class="card-head"><span>단계 타임라인</span><span id="tl-overall" class="stats"></span><span id="run-status" class="small mono dim"></span></div>
         <div id="timeline"></div>
-      </div>
+      </div></details>
 
       <!-- 판정 기록 -->
-      <div class="card area-vlist" id="s-vlist">
+      <details class="card area-vlist" id="s-vlist"><summary>단계별 판정 기록</summary><div class="detail-body">
         <div class="card-head"><span>판정 기록</span><span class="small dim">최신순</span></div>
         <ul id="verdict-list" class="events"></ul>
-      </div>
+      </div></details>
 
       <!-- 기록 초안 -->
-      <div class="card area-report" id="s-report">
+      <details class="card area-report" id="s-report"><summary>시험 기록 초안 보기 <span class="dim small">엔지니어 최종 검토 대상</span></summary><div class="detail-body">
         <div class="card-head"><span>시험 기록 초안</span><span id="report-meta" class="small dim"></span>
           <button id="btn-report" class="link" disabled>재생성</button></div>
         <pre id="report" class="doc">실행이 끝나면 한국어 기록 초안이 생성됩니다.</pre>
-      </div>
+      </div></details>
     </section>
   </main>
 
   <script src="/static/uplot.min.js"></script>
-  <script src="/static/app.js?v=3"></script>
+  <script src="/static/app.js?v=4"></script>
 </body>
 </html>
