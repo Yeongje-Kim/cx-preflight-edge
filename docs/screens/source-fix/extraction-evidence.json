@@ -1,0 +1,133 @@
+{
+  "sid": "cx-20260906-230844-e10a",
+  "S2": {
+    "tag": "LOAD_KW",
+    "op": ">=",
+    "value": 200.0,
+    "band": null,
+    "within_sec": 30.0,
+    "hold_sec": 10.0
+  },
+  "stats": {
+    "backend": "geniex-18181",
+    "steps": [
+      {
+        "step_id": "S1",
+        "attempts": 1,
+        "ok": true,
+        "error": null,
+        "sec": 8.305028627997672,
+        "issues": [],
+        "source_verified": true
+      },
+      {
+        "step_id": "S2",
+        "attempts": 2,
+        "ok": true,
+        "error": null,
+        "sec": 17.129670207003073,
+        "issues": [
+          "ValueError: S2.expected[0].op: 원문 값 '>=', 추출 값 '=='"
+        ],
+        "source_verified": true
+      },
+      {
+        "step_id": "S3",
+        "attempts": 1,
+        "ok": true,
+        "error": null,
+        "sec": 11.081019680997997,
+        "issues": [],
+        "source_verified": true
+      },
+      {
+        "step_id": "S4",
+        "attempts": 1,
+        "ok": true,
+        "error": null,
+        "sec": 9.372835930000292,
+        "issues": [],
+        "source_verified": true
+      },
+      {
+        "step_id": "S5",
+        "attempts": 1,
+        "ok": true,
+        "error": null,
+        "sec": 8.545222771004774,
+        "issues": [],
+        "source_verified": true
+      },
+      {
+        "step_id": "S6",
+        "attempts": 1,
+        "ok": true,
+        "error": null,
+        "sec": 9.6037838379998,
+        "issues": [],
+        "source_verified": true
+      },
+      {
+        "step_id": "S7",
+        "attempts": 1,
+        "ok": true,
+        "error": null,
+        "sec": 9.183583644000464,
+        "issues": [],
+        "source_verified": true
+      },
+      {
+        "step_id": "S8",
+        "attempts": 1,
+        "ok": true,
+        "error": null,
+        "sec": 11.266895321001357,
+        "issues": [],
+        "source_verified": true
+      }
+    ],
+    "fallback_ids": [],
+    "source_check": "tagged-procedure-v1",
+    "n_source_verified": 8,
+    "n_ok": 8,
+    "n_total": 8,
+    "sec_total": 84.48804002000543
+  },
+  "summary": {
+    "status": "finished",
+    "telemetry": "pass",
+    "mode": "llm",
+    "preflight_errors": 0,
+    "preflight_warnings": 0,
+    "extract": {
+      "backend": "geniex-18181",
+      "fallback_ids": [],
+      "source_check": "tagged-procedure-v1",
+      "n_source_verified": 8,
+      "n_ok": 8,
+      "n_total": 8,
+      "sec_total": 84.48804002000543
+    },
+    "approved_by": "commissioning engineer",
+    "approved_at": 1788761414.9892962,
+    "approved_with_errors": 0,
+    "speed": 0.0,
+    "seed": 0,
+    "overall": "PASS",
+    "states": {
+      "S1": "PASS",
+      "S2": "PASS",
+      "S3": "PASS",
+      "S4": "PASS",
+      "S5": "PASS",
+      "S6": "PASS",
+      "S7": "PASS",
+      "S8": "PASS"
+    },
+    "n_pass": 8,
+    "n_fail": 0,
+    "n_hold": 0,
+    "n_skipped": 0,
+    "label_overall": "PASS"
+  }
+}

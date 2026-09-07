@@ -1,0 +1,12 @@
+[
+  {
+    "operation": "/approve",
+    "status": 409,
+    "detail": "원문 대조 실패: S2.expected[0].op: 원문 값 '>=', 추출 값 '>'. 다시 추출하거나 원문과 규칙을 검토하세요"
+  },
+  {
+    "operation": "/run",
+    "status": 409,
+    "detail": "승인 규칙 원문 대조 실패: S2.expected[0].op: 원문 값 '>=', 추출 값 '>'. 재추출·재승인이 필요합니다"
+  }
+]

@@ -1,6 +1,7 @@
 """FastAPI 서버: 세션 생성(추출) → Preflight → 승인 → 재생 판정(SSE) → 보고서. 정적 UI 서빙.
 
-모든 처리는 이 프로세스(보드) 안에서 끝난다. 외부 연결은 LLM 서비스(루프백)뿐이다.
+판정은 이 프로세스에서, AI 추론은 설정된 로컬 LLM 서비스에서 수행한다.
+네트워크 상태 점검은 별도이며 단일 서버 프로세스로 실행한다.
 """
 from __future__ import annotations
 
@@ -20,6 +21,7 @@ from . import __version__, netcheck
 from .engine import RunEngine
 from .llm.client import LlmClient, autodetect
 from .llm.extract import extract_plan, find_contradictions, map_tags
+from .llm.source_guard import validate_plan_source
 from .llm.report import build_facts, draft_report_ko, render_report_md
 from .preflight import run_preflight
 from .schemas import Finding, TagList, TestPlan
@@ -79,6 +81,7 @@ class State:
         self.llm_checked = 0.0
         self.meter = netcheck.UplinkMeter()
         self.buses: dict[str, SessionBus] = {}
+        self.session_locks: dict[str, Any] = {}
         self.last_latency_ms: Optional[float] = None
         self.lock = threading.Lock()
 
@@ -93,6 +96,13 @@ class State:
             if sid not in self.buses:
                 self.buses[sid] = SessionBus()
             return self.buses[sid]
+
+    def session_lock(self, sid: str):
+        """승인과 실행 시작을 같은 세션 안에서 직렬화한다."""
+        with self.lock:
+            if sid not in self.session_locks:
+                self.session_locks[sid] = threading.RLock()
+            return self.session_locks[sid]
 
 
 app = FastAPI(title="Cx-Preflight Edge", version=__version__)
@@ -234,6 +244,18 @@ def _session_or_404(sid: str) -> None:
         raise HTTPException(404, "session not found")
 
 
+def _has_run(store: SessionStore, sid: str) -> bool:
+    # 실행 파일도 확인해 서버 재시작 및 이전 버전의 완료 세션을 보호한다.
+    return (store.read_meta(sid).summary.get("status") in ("running", "reporting", "finished", "error")
+            or any(store.has(sid, name) for name in
+                   ("rules.executed.json", "telemetry.csv", "verdicts.jsonl", "events.jsonl")))
+
+
+def _require_unrun(store: SessionStore, sid: str) -> None:
+    if _has_run(store, sid):
+        raise HTTPException(409, "실행한 세션의 승인 규칙과 결과는 변경할 수 없습니다. 새 시험을 준비하세요")
+
+
 @app.get("/api/v1/sessions/{sid}")
 def get_session(sid: str) -> dict:
     st = _st()
@@ -242,10 +264,11 @@ def get_session(sid: str) -> dict:
     out: dict[str, Any] = {"meta": s.read_meta(sid).model_dump(mode="json")}
     for name, key in (("plan.json", "plan"), ("preflight.json", "preflight"), ("rules.approved.json", "approved"),
                       ("segments.json", "segments"), ("remarks.json", "remarks"), ("labels.json", "labels"),
-                      ("extract_stats.json", "extract_stats")):
+                      ("extract_stats.json", "extract_stats"), ("rules.executed.json", "executed")):
         if s.has(sid, name):
             out[key] = s.load_json(sid, name)
     out["verdicts"] = s.load_jsonl(sid, "verdicts.jsonl")
+    out["has_run"] = _has_run(s, sid)
     out["has_report"] = s.has(sid, "report.md")
     out["has_telemetry"] = s.has(sid, "telemetry.csv")
     return out
@@ -253,8 +276,14 @@ def get_session(sid: str) -> dict:
 
 @app.delete("/api/v1/sessions/{sid}")
 def delete_session(sid: str) -> dict:
-    _session_or_404(sid)
-    _st().store.delete(sid)
+    st = _st()
+    with st.session_lock(sid):
+        _session_or_404(sid)
+        if st.store.read_meta(sid).summary.get("status") in ("running", "reporting"):
+            raise HTTPException(409, "실행 또는 보고서 생성 중인 세션은 삭제할 수 없습니다")
+        st.store.delete(sid)
+        with st.lock:
+            st.buses.pop(sid, None)
     return {"deleted": sid}
 
 
@@ -275,13 +304,27 @@ def get_preflight(sid: str) -> dict:
 
 @app.post("/api/v1/sessions/{sid}/approve")
 def approve(sid: str, body: dict = Body(default={})) -> dict:
-    _session_or_404(sid)
     st = _st()
+    with st.session_lock(sid):
+        return _approve(sid, body, st)
+
+
+def _approve(sid: str, body: dict, st: State) -> dict:
+    _session_or_404(sid)
+    _require_unrun(st.store, sid)
+    if not st.store.has(sid, "plan.json"):
+        raise HTTPException(409, "절차서 구조화가 끝난 뒤 승인하세요")
     plan_data = body.get("plan") or st.store.load_json(sid, "plan.json")
     try:
         plan = TestPlan.model_validate(plan_data)
     except Exception as e:
         raise HTTPException(400, f"invalid plan: {e}")
+    meta = st.store.read_meta(sid)
+    if meta.summary.get("mode") == "llm" and meta.case != "preflight_warn":
+        try:
+            validate_plan_source(plan, st.store.load_text(sid, "plan.md"))
+        except ValueError as e:
+            raise HTTPException(409, f"원문 대조 실패: {e}. 다시 추출하거나 원문과 규칙을 검토하세요") from e
     approver = str(body.get("approver") or "engineer").strip()[:40]
     findings = run_preflight(plan, _tags())
     n_err = sum(1 for f in findings if f.severity.value == "ERROR")
@@ -296,14 +339,23 @@ def approve(sid: str, body: dict = Body(default={})) -> dict:
 
 @app.post("/api/v1/sessions/{sid}/run")
 def run_session(sid: str, body: dict = Body(default={})) -> dict:
-    _session_or_404(sid)
     st = _st()
+    with st.session_lock(sid):
+        return _start_run(sid, body, st)
+
+
+def _start_run(sid: str, body: dict, st: State) -> dict:
+    _session_or_404(sid)
     s = st.store
+    _require_unrun(s, sid)
     meta = s.read_meta(sid)
     if not s.has(sid, "rules.approved.json"):
         raise HTTPException(409, "승인된 규칙이 없다. 먼저 승인하라")
-    if meta.summary.get("status") in ("running",):
-        raise HTTPException(409, "already running")
+    if meta.summary.get("mode") == "llm" and meta.case != "preflight_warn":
+        try:
+            validate_plan_source(TestPlan.model_validate(s.load_json(sid, "rules.approved.json")), s.load_text(sid, "plan.md"))
+        except ValueError as e:
+            raise HTTPException(409, f"승인 규칙 원문 대조 실패: {e}. 재추출·재승인이 필요합니다") from e
     tel = body.get("telemetry") or meta.summary.get("telemetry") or "pass"
     if tel not in SYNTH_CASES:
         raise HTTPException(400, f"unknown telemetry case {tel}")
@@ -311,11 +363,14 @@ def run_session(sid: str, body: dict = Body(default={})) -> dict:
     seed = int(body.get("seed", 0))
     plan = TestPlan.model_validate(s.load_json(sid, "rules.approved.json"))
     rows, labels, _ = make_case(tel, seed=seed)
+    # 시험 한 번당 세션 하나. 실행 당시 승인 규칙은 별도 보관한다.
+    s.save_json(sid, "rules.executed.json", plan.model_dump(mode="json"))
     write_csv(rows, s.path(sid) / "telemetry.csv")
     s.save_json(sid, "labels.json", labels)
     (s.path(sid) / "verdicts.jsonl").write_text("", encoding="utf-8")
     (s.path(sid) / "events.jsonl").write_text("", encoding="utf-8")
-    s.update_meta(sid, case=meta.case, summary={"status": "running", "telemetry": tel, "speed": speed, "seed": seed})
+    s.update_meta(sid, case=meta.case, summary={"status": "running", "telemetry": tel, "speed": speed, "seed": seed,
+                                                             "run_started_at": time.time()})
     bus = st.bus(sid)
     meter = netcheck.UplinkMeter()
 
@@ -333,7 +388,7 @@ def run_session(sid: str, body: dict = Body(default={})) -> dict:
                 for ev in events:
                     s.append_jsonl(sid, "events.jsonl", ev.model_dump(mode="json"))
                     bus.publish({"type": "event", **ev.model_dump(mode="json")})
-                    if ev.to_state.value in ("PASS", "FAIL", "ABORT", "SKIPPED"):
+                    if ev.to_state.value in ("PASS", "FAIL", "ABORT", "HOLD", "SKIPPED"):
                         v = next(x for x in reversed(eng.verdicts) if x.step_id == ev.step_id)
                         s.append_jsonl(sid, "verdicts.jsonl", v.model_dump(mode="json"))
                         st.last_latency_ms = v.latency_ms
@@ -358,9 +413,10 @@ def run_session(sid: str, body: dict = Body(default={})) -> dict:
             timings = {"run_wall_sec": time.perf_counter() - t0,
                        "latency_ms_max": max((v.latency_ms for v in eng.verdicts), default=0.0)}
             s.update_meta(sid, offline=offline, timings=timings,
-                          summary={"status": "finished", **summary, "label_overall": labels.get("overall")})
+                          summary={"status": "reporting", **summary, "label_overall": labels.get("overall")})
             bus.publish({"type": "run_done", "session": sid, "summary": summary, "offline": offline, "timings": timings})
             _make_report(sid, plan, eng, offline)
+            s.update_meta(sid, summary={"status": "finished"})
         except Exception as e:
             s.update_meta(sid, summary={"status": "error", "error": str(e)})
             bus.publish({"type": "error", "message": str(e)})
@@ -391,12 +447,21 @@ def _make_report(sid: str, plan: TestPlan, eng: RunEngine, offline: dict) -> dic
 
 @app.post("/api/v1/sessions/{sid}/report")
 def make_report(sid: str) -> dict:
-    _session_or_404(sid)
     st = _st()
+    with st.session_lock(sid):
+        return _regenerate_report(sid, st)
+
+
+def _regenerate_report(sid: str, st: State) -> dict:
+    _session_or_404(sid)
     s = st.store
+    if s.read_meta(sid).summary.get("status") in ("running", "reporting"):
+        raise HTTPException(409, "시험과 기록 생성이 끝난 뒤 다시 요청하세요")
     if not s.has(sid, "segments.json"):
         raise HTTPException(409, "실행 결과가 없다")
-    plan = TestPlan.model_validate(s.load_json(sid, "rules.approved.json"))
+    # 이전 버전의 세션은 보관된 승인본으로 열되, 재승인·재실행은 차단한다.
+    plan_file = "rules.executed.json" if s.has(sid, "rules.executed.json") else "rules.approved.json"
+    plan = TestPlan.model_validate(s.load_json(sid, plan_file))
     from .schemas import Segment, Verdict  # 지역 import: 재구성용
     eng = RunEngine(plan)
     eng.verdicts = [Verdict.model_validate(v) for v in s.load_jsonl(sid, "verdicts.jsonl")]
@@ -435,10 +500,9 @@ def stream(sid: str) -> StreamingResponse:
         try:
             for ev in backlog:
                 yield f"data: {json.dumps(ev, ensure_ascii=False)}\n\n"
-            if bus.done:
-                if not any(e.get("type") == "done" for e in backlog):
-                    yield "data: {\"type\": \"done\"}\n\n"
+            if any(e.get("type") == "done" for e in backlog):
                 return
+            # subscribe 이후 완료된 경우에는 큐의 남은 판정·보고서도 전달한다.
             last = time.time()
             while True:
                 try:

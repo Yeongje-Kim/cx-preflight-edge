@@ -14,6 +14,7 @@ from typing import Optional
 
 from ..schemas import Finding, PreflightCode, Severity, Step, TagList, TestPlan
 from .client import LlmClient, LlmError
+from .source_guard import validate_source
 from .prompts import contradiction_messages, extraction_messages, mapping_messages
 
 _THINK = re.compile(r"<think>.*?</think>", re.S)
@@ -28,32 +29,23 @@ def strip_think(text: str) -> str:
 
 
 def extract_last_json_object(text: str) -> Optional[str]:
-    """마지막으로 균형 잡힌 {...}를 돌려준다 (judge.rs extract_last_json_object와 같은 규칙)."""
-    end = text.rfind("}")
-    while end != -1:
-        depth = 0
-        in_str = False
-        esc = False
-        for i in range(end, -1, -1):
-            ch = text[i]
-            if in_str:
-                if esc:
-                    esc = False
-                elif ch == "\\":
-                    esc = True
-                elif ch == '"':
-                    in_str = False
-                continue
-            if ch == '"':
-                in_str = True
-            elif ch == "}":
-                depth += 1
-            elif ch == "{":
-                depth -= 1
-                if depth == 0:
-                    return text[i:end + 1]
-        end = text.rfind("}", 0, end)
-    return None
+    """Return the last complete object, respecting JSON escapes and nested objects."""
+    decoder = json.JSONDecoder()
+    cursor = 0
+    last = None
+    while cursor < len(text):
+        start = text.find("{", cursor)
+        if start < 0:
+            break
+        try:
+            obj, end = decoder.raw_decode(text, start)
+        except ValueError:
+            cursor = start + 1
+            continue
+        if isinstance(obj, dict):
+            last = text[start:end]
+        cursor = end
+    return last
 
 
 def parse_json_loose(text: str) -> dict:
@@ -135,16 +127,19 @@ def _normalize_step(d: dict, step_id: str, title: str, source_text: str) -> dict
 def extract_step(client: LlmClient, step_id: str, title: str, text: str, max_tokens: int = 400,
                  retries: int = 2) -> tuple[Optional[Step], dict]:
     """단계 1개 추출. (Step|None, stats)."""
-    stats = {"step_id": step_id, "attempts": 0, "ok": False, "error": None, "sec": 0.0}
+    stats = {"step_id": step_id, "attempts": 0, "ok": False, "error": None, "sec": 0.0, "issues": []}
     messages = extraction_messages(text)
     t0 = time.perf_counter()
     last_err: Optional[str] = None
     for attempt in range(retries + 1):
         stats["attempts"] += 1
+        raw = ""
         try:
             raw = client.complete(messages, max_tokens=max_tokens, json_mode=True)
             data = parse_json_loose(raw)
             step = Step.model_validate(_normalize_step(data, step_id, title, text))
+            validate_source(step, text)
+            stats["source_verified"] = True
             stats["ok"] = True
             stats["sec"] = time.perf_counter() - t0
             return step, stats
@@ -152,8 +147,9 @@ def extract_step(client: LlmClient, step_id: str, title: str, text: str, max_tok
             last_err = f"{type(e).__name__}: {e}"
         except Exception as e:  # pydantic ValidationError 등
             last_err = f"{type(e).__name__}: {str(e)[:300]}"
+        stats["issues"].append(last_err)
         messages = messages + [
-            {"role": "assistant", "content": "(invalid)"},
+            {"role": "assistant", "content": "(invalid)\n" + raw[:4000]},
             {"role": "user", "content": "Your previous output did not fit the schema. Error:\n"
                                         + (last_err or "")[:400]
                                         + "\nFix exactly these fields and output ONLY the JSON object."},
@@ -168,6 +164,8 @@ def extract_plan(md: str, client: LlmClient, golden: Optional[TestPlan] = None,
     """전체 절차서 추출. 실패한 단계는 golden으로 채운다(있을 때). stats에 단계별 결과와 폴백 여부."""
     plan_id, title = plan_header(md)
     chunks = chunk_steps(md)
+    if not chunks:
+        raise LlmError("절차서에 추출할 단계가 없습니다")
     steps: list[Step] = []
     per_step = []
     fallback_ids: list[str] = []
@@ -177,7 +175,9 @@ def extract_plan(md: str, client: LlmClient, golden: Optional[TestPlan] = None,
         if step is None:
             if golden is not None:
                 try:
-                    steps.append(golden.step(sid))
+                    fallback = golden.step(sid)
+                    validate_source(fallback, text)
+                    steps.append(fallback)
                     fallback_ids.append(sid)
                     continue
                 except KeyError:
@@ -187,6 +187,8 @@ def extract_plan(md: str, client: LlmClient, golden: Optional[TestPlan] = None,
     plan = TestPlan(plan_id=plan_id, title=title, steps=steps,
                     equipment=golden.equipment if golden else [], tag_aliases=golden.tag_aliases if golden else {})
     stats = {"backend": getattr(client, "name", "?"), "steps": per_step, "fallback_ids": fallback_ids,
+             "source_check": "tagged-procedure-v1",
+             "n_source_verified": sum(1 for s in per_step if s.get("source_verified")),
              "n_ok": sum(1 for s in per_step if s["ok"]), "n_total": len(per_step),
              "sec_total": sum(s["sec"] for s in per_step)}
     return plan, stats

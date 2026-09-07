@@ -1,6 +1,6 @@
 """세션 저장소: sessions/<id>/ 아래 파일로만 상태를 남긴다 (DB 없음, 폐쇄망 로컬).
 
-파일: plan.md, plan.json, tags.json, preflight.json, rules.approved.json, telemetry.csv, labels.json,
+파일: plan.md, plan.json, tags.json, preflight.json, rules.approved.json, rules.executed.json, telemetry.csv, labels.json,
       verdicts.jsonl, segments.json, events.jsonl, remarks.json, report.md, meta.json
 """
 from __future__ import annotations
@@ -9,6 +9,8 @@ import json
 import os
 import secrets
 import time
+import threading
+from functools import wraps
 from datetime import datetime
 from pathlib import Path
 from typing import Any, Optional
@@ -26,8 +28,17 @@ def new_session_id() -> str:
     return f"cx-{datetime.now().strftime('%Y%m%d-%H%M%S')}-{secrets.token_hex(2)}"
 
 
+def synchronized(method):
+    @wraps(method)
+    def call(self, *args, **kwargs):
+        with self._lock:
+            return method(self, *args, **kwargs)
+    return call
+
+
 class SessionStore:
     def __init__(self, root: Optional[Path] = None) -> None:
+        self._lock = threading.RLock()
         self.root = Path(root) if root else sessions_root()
         self.root.mkdir(parents=True, exist_ok=True)
 
@@ -54,6 +65,7 @@ class SessionStore:
     def read_meta(self, sid: str) -> SessionMeta:
         return SessionMeta.model_validate(self.load_json(sid, "meta.json"))
 
+    @synchronized
     def update_meta(self, sid: str, **fields: Any) -> SessionMeta:
         meta = self.read_meta(sid)
         data = meta.model_dump()
@@ -66,11 +78,18 @@ class SessionStore:
         self.write_meta(meta)
         return meta
 
+    @synchronized
     def save_json(self, sid: str, name: str, obj: Any) -> Path:
         p = self.path(sid) / name
-        p.write_text(json.dumps(obj, ensure_ascii=False, indent=2), encoding="utf-8")
+        temporary = p.with_name(p.name + "." + secrets.token_hex(8) + ".tmp")
+        try:
+            temporary.write_text(json.dumps(obj, ensure_ascii=False, indent=2), encoding="utf-8")
+            os.replace(temporary, p)
+        finally:
+            temporary.unlink(missing_ok=True)
         return p
 
+    @synchronized
     def load_json(self, sid: str, name: str) -> Any:
         return json.loads((self.path(sid) / name).read_text(encoding="utf-8"))
 
@@ -85,10 +104,12 @@ class SessionStore:
     def load_text(self, sid: str, name: str) -> str:
         return (self.path(sid) / name).read_text(encoding="utf-8")
 
+    @synchronized
     def append_jsonl(self, sid: str, name: str, obj: Any) -> None:
         with (self.path(sid) / name).open("a", encoding="utf-8") as f:
             f.write(json.dumps(obj, ensure_ascii=False) + "\n")
 
+    @synchronized
     def load_jsonl(self, sid: str, name: str) -> list[Any]:
         p = self.path(sid) / name
         if not p.exists():
