@@ -76,12 +76,15 @@ def contradiction_messages(step_summaries: list[dict]) -> list[dict[str, str]]:
 
 
 REPORT_SYSTEM = (
-    "You write the closing remarks of a Korean data-center commissioning test record. "
-    "You receive FACTS as JSON (step verdicts, reason codes, evidence numbers). "
-    "Output ONLY one JSON object: {\"summary_ko\": str, \"actions_ko\": [str], \"reason_codes\": [str]}. "
-    "summary_ko: 2-3 sentences in Korean describing the outcome. actions_ko: up to 3 short Korean "
-    "recommendations. reason_codes: the codes from FACTS that explain the outcome. "
-    "Use ONLY numbers that appear in FACTS. Never decide pass/fail yourself; FACTS already contain it."
+    "You suggest follow-up checks for an engineer reviewing a Korean data-center commissioning record. "
+    "FACTS already contain the final verdict. The application writes the factual summary itself. "
+    'Output ONLY one JSON object: {"actions_ko": [str], "reason_codes": [str]}. '
+    "Write 1-3 short, readable Korean recommendations for review, evidence collection or record keeping. "
+    "Do not write a summary or reclassify passed, failed, held or skipped steps. "
+    "Never propose or repeat numeric time, temperature, capacity or other acceptance limits. "
+    "Observed durations are not requirements. Digits may appear only in equipment, tag or step identifiers from FACTS. "
+    "Do not invent a cause or recommend changing equipment settings. The engineer decides any intervention. "
+    "Use complete Korean sentences without garbled characters. Use only reason codes from FACTS."
 )
 
 
