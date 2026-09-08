@@ -1,0 +1,57 @@
+{
+  "plan_id": "IST-EVAL-AHU",
+  "title": "공조기 댐퍼와 급기온도 확인",
+  "equipment": [],
+  "steps": [
+    {
+      "id": "S1",
+      "title": "댐퍼 위치 확인",
+      "action": "외기 댐퍼 위치를 확인한다.",
+      "preconditions": [],
+      "trigger": null,
+      "expected": [
+        {
+          "tag": "OA_DAMPER_POS",
+          "op": "<",
+          "value": 50.0,
+          "band": null,
+          "within_sec": 12.0,
+          "hold_sec": 0.0
+        }
+      ],
+      "abort_conditions": [],
+      "rollback": [],
+      "changes_state": false,
+      "precond_wait_sec": 10.0,
+      "trigger_wait_sec": 120.0,
+      "source_text": "### S1 댐퍼 위치 확인\n- 조치: 외기 댐퍼 위치를 확인한다.\n- 기대 결과: OA_DAMPER_POS 50 미만. 허용시간 12초.\n- 복구: 해당 없음(상태 변경 없음)\n- 상태 변경: 없음"
+    },
+    {
+      "id": "S2",
+      "title": "급기온도 확인",
+      "action": "급기온도를 관찰한다.",
+      "preconditions": [],
+      "trigger": null,
+      "expected": [
+        {
+          "tag": "SUPPLY_AIR_T",
+          "op": "in_band",
+          "value": null,
+          "band": [
+            18.0,
+            24.0
+          ],
+          "within_sec": 45.0,
+          "hold_sec": 3.0
+        }
+      ],
+      "abort_conditions": [],
+      "rollback": [],
+      "changes_state": false,
+      "precond_wait_sec": 10.0,
+      "trigger_wait_sec": 120.0,
+      "source_text": "### S2 급기온도 확인\n- 조치: 급기온도를 관찰한다.\n- 기대 결과: SUPPLY_AIR_T 18~24 °C를 3초 이상 유지. 허용시간 45초.\n- 복구: 해당 없음(상태 변경 없음)\n- 상태 변경: 없음"
+    }
+  ],
+  "tag_aliases": {}
+}

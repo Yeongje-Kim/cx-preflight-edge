@@ -1,0 +1,30 @@
+[
+  {
+    "messages": [
+      {
+        "role": "system",
+        "content": "You convert ONE step of a Korean data-center commissioning test procedure into a JSON object. Rules: output ONLY one JSON object, no prose, no markdown fences. Use exactly these keys: id, title, action, preconditions, trigger, expected, abort_conditions, rollback, changes_state. Each condition is {\"tag\", \"op\", \"value\"} or {\"tag\", \"op\": \"in_band\", \"band\": [lo, hi]}; op is one of ==, !=, <, <=, >, >=, in_band. Expected results add within_sec (seconds) and hold_sec (seconds of continuous hold, 0 if not stated). Every item of expected is ONE object that contains tag, op, value or band, within_sec and hold_sec together. Never split the timing fields into a separate object. Use the BMS tag names that appear in the text (e.g. CH1_STATUS, CHWS_T_SUP). trigger is null when the text has no 트리거. rollback is a list of short Korean strings from 복구. changes_state is true only when the text says 상태 변경: 있음. Korean timing: 허용시간 30초 means within_sec=30; 10초 이상 유지 means hold_sec=10. Both N초 유지 and N초 이상 유지 mean hold_sec=N, even when a separate sentence gives 허용시간. One condition may have BOTH a deadline and a hold duration; do not create a second condition for timing. Do not swap them. 이상 means >= (not >); 이하 means <=; 초과 means >; 미만 means <. Example: LOAD_KW 200 kW 이상을 10초 이상 유지. 허용시간 30초 => tag=LOAD_KW, op=>=, value=200, within_sec=30, hold_sec=10. When 상태 변경: 있음 is absent, changes_state must be false even if 복구 mentions restarting. Keep Korean text for title/action/rollback. Do not invent values that are not in the text."
+      },
+      {
+        "role": "user",
+        "content": "Example output for a different step:\n{\"id\": \"S3\", \"title\": \"CH-1 모의 트립\", \"action\": \"CH-1 트립 접점을 모의 입력한다.\", \"preconditions\": [{\"tag\": \"CH1_STATUS\", \"op\": \"==\", \"value\": 1}], \"trigger\": {\"tag\": \"CH1_TRIP\", \"op\": \"==\", \"value\": 1}, \"expected\": [{\"tag\": \"CH1_STATUS\", \"op\": \"==\", \"value\": 0, \"within_sec\": 5, \"hold_sec\": 0}, {\"tag\": \"CHWS_T_SUP\", \"op\": \"in_band\", \"band\": [6, 8], \"within_sec\": 60, \"hold_sec\": 10}], \"abort_conditions\": [{\"tag\": \"CHWS_T_SUP\", \"op\": \">\", \"value\": 14}], \"rollback\": [\"트립 접점 복구\", \"CH-1 재기동\"], \"changes_state\": true}\n\nNow convert this step. Output only the JSON object.\n\n### S1 댐퍼 위치 확인\n- 조치: 외기 댐퍼 위치를 확인한다.\n- 기대 결과: OA_DAMPER_POS 50 미만. 허용시간 12초.\n- 복구: 해당 없음(상태 변경 없음)\n- 상태 변경: 없음"
+      }
+    ],
+    "response": "{\"id\": \"S1\", \"title\": \"댐퍼 위치 확인\", \"action\": \"외기 댐퍼 위치를 확인한다.\", \"preconditions\": [], \"trigger\": null, \"expected\": [{\"tag\": \"OA_DAMPER_POS\", \"op\": \"<\", \"value\": 50, \"within_sec\": 12, \"hold_sec\": 0}], \"abort_conditions\": [], \"rollback\": [\"해당 없음\"], \"changes_state\": false}",
+    "sec": 6.3144013510027435
+  },
+  {
+    "messages": [
+      {
+        "role": "system",
+        "content": "You convert ONE step of a Korean data-center commissioning test procedure into a JSON object. Rules: output ONLY one JSON object, no prose, no markdown fences. Use exactly these keys: id, title, action, preconditions, trigger, expected, abort_conditions, rollback, changes_state. Each condition is {\"tag\", \"op\", \"value\"} or {\"tag\", \"op\": \"in_band\", \"band\": [lo, hi]}; op is one of ==, !=, <, <=, >, >=, in_band. Expected results add within_sec (seconds) and hold_sec (seconds of continuous hold, 0 if not stated). Every item of expected is ONE object that contains tag, op, value or band, within_sec and hold_sec together. Never split the timing fields into a separate object. Use the BMS tag names that appear in the text (e.g. CH1_STATUS, CHWS_T_SUP). trigger is null when the text has no 트리거. rollback is a list of short Korean strings from 복구. changes_state is true only when the text says 상태 변경: 있음. Korean timing: 허용시간 30초 means within_sec=30; 10초 이상 유지 means hold_sec=10. Both N초 유지 and N초 이상 유지 mean hold_sec=N, even when a separate sentence gives 허용시간. One condition may have BOTH a deadline and a hold duration; do not create a second condition for timing. Do not swap them. 이상 means >= (not >); 이하 means <=; 초과 means >; 미만 means <. Example: LOAD_KW 200 kW 이상을 10초 이상 유지. 허용시간 30초 => tag=LOAD_KW, op=>=, value=200, within_sec=30, hold_sec=10. When 상태 변경: 있음 is absent, changes_state must be false even if 복구 mentions restarting. Keep Korean text for title/action/rollback. Do not invent values that are not in the text."
+      },
+      {
+        "role": "user",
+        "content": "Example output for a different step:\n{\"id\": \"S3\", \"title\": \"CH-1 모의 트립\", \"action\": \"CH-1 트립 접점을 모의 입력한다.\", \"preconditions\": [{\"tag\": \"CH1_STATUS\", \"op\": \"==\", \"value\": 1}], \"trigger\": {\"tag\": \"CH1_TRIP\", \"op\": \"==\", \"value\": 1}, \"expected\": [{\"tag\": \"CH1_STATUS\", \"op\": \"==\", \"value\": 0, \"within_sec\": 5, \"hold_sec\": 0}, {\"tag\": \"CHWS_T_SUP\", \"op\": \"in_band\", \"band\": [6, 8], \"within_sec\": 60, \"hold_sec\": 10}], \"abort_conditions\": [{\"tag\": \"CHWS_T_SUP\", \"op\": \">\", \"value\": 14}], \"rollback\": [\"트립 접점 복구\", \"CH-1 재기동\"], \"changes_state\": true}\n\nNow convert this step. Output only the JSON object.\n\n### S2 급기온도 확인\n- 조치: 급기온도를 관찰한다.\n- 기대 결과: SUPPLY_AIR_T 18~24 °C를 3초 이상 유지. 허용시간 45초.\n- 복구: 해당 없음(상태 변경 없음)\n- 상태 변경: 없음"
+      }
+    ],
+    "response": "{\"id\": \"S2\", \"title\": \"급기온도 확인\", \"action\": \"급기온도를 관찰한다.\", \"preconditions\": [], \"trigger\": null, \"expected\": [{\"tag\": \"SUPPLY_AIR_T\", \"op\": \"in_band\", \"band\": [18, 24], \"within_sec\": 45, \"hold_sec\": 3}], \"abort_conditions\": [], \"rollback\": [\"해당 없음\"], \"changes_state\": false}",
+    "sec": 6.5464966550061945
+  }
+]

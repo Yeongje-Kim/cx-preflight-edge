@@ -1,0 +1,24 @@
+{
+  "source": "unchanged NPU session copies viewed on PC",
+  "results": [
+    {
+      "case": "pass",
+      "overall": "PASS",
+      "source": "geniex-18181",
+      "historyReadOnly": true
+    },
+    {
+      "case": "fail_start",
+      "overall": "FAIL",
+      "source": "geniex-18181",
+      "historyReadOnly": true
+    },
+    {
+      "case": "fail_dropout",
+      "overall": "HOLD",
+      "source": "geniex-18181",
+      "historyReadOnly": true
+    }
+  ],
+  "errors": []
+}

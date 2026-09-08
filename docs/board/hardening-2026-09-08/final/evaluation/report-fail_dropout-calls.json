@@ -1,0 +1,16 @@
+[
+  {
+    "messages": [
+      {
+        "role": "system",
+        "content": "Select relevant follow-up checks for an engineer from the provided CANDIDATES. Every candidate is already validated against the final test verdict. Return ONLY one JSON object: {\"action_ids\": [\"exact candidate ID\"]}. Select 1 to 3 IDs. Copy IDs exactly. Do not write sentences, causes, settings, or new IDs."
+      },
+      {
+        "role": "user",
+        "content": "{\"overall\": \"HOLD\", \"CANDIDATES\": [{\"id\": \"S7.measurement_path\", \"step_id\": \"S7\", \"reason_code\": \"TAG_MISSING_DATA\", \"text\": \"S7 단계: 계측점의 통신 상태와 수집 경로를 확인한다.\"}, {\"id\": \"S7.collection_record\", \"step_id\": \"S7\", \"reason_code\": \"TAG_MISSING_DATA\", \"text\": \"S7 단계: 원본 측정 기록과 수집 로그를 대조해 결측 구간을 확인한다.\"}]}"
+      }
+    ],
+    "response": "{\"action_ids\": [\"S7.measurement_path\", \"S7.collection_record\"]}",
+    "sec": 1.199954217998311
+  }
+]

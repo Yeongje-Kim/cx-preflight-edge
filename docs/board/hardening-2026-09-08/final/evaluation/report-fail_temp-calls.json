@@ -1,0 +1,16 @@
+[
+  {
+    "messages": [
+      {
+        "role": "system",
+        "content": "Select relevant follow-up checks for an engineer from the provided CANDIDATES. Every candidate is already validated against the final test verdict. Return ONLY one JSON object: {\"action_ids\": [\"exact candidate ID\"]}. Select 1 to 3 IDs. Copy IDs exactly. Do not write sentences, causes, settings, or new IDs."
+      },
+      {
+        "role": "user",
+        "content": "{\"overall\": \"FAIL\", \"CANDIDATES\": [{\"id\": \"S7.temperature_trend\", \"step_id\": \"S7\", \"reason_code\": \"TEMP_RECOVERY_TIMEOUT\", \"text\": \"S7 단계: 공급온도 추이와 운전 상태의 기록을 대조한다.\"}, {\"id\": \"S7.flow_record\", \"step_id\": \"S7\", \"reason_code\": \"TEMP_RECOVERY_TIMEOUT\", \"text\": \"S7 단계: 냉수 유량과 펌프 운전 기록을 확인한다.\"}, {\"id\": \"S7.recovery_review\", \"step_id\": \"S7\", \"reason_code\": \"TEMP_RECOVERY_TIMEOUT\", \"text\": \"S7 단계의 승인된 복구절차를 검토하고 담당 엔지니어와 재시험 조건을 확인한다.\"}]}"
+      }
+    ],
+    "response": "{\"action_ids\": [\"S7.temperature_trend\", \"S7.flow_record\", \"S7.recovery_review\"]}",
+    "sec": 1.6656778400065377
+  }
+]

@@ -1,0 +1,16 @@
+[
+  {
+    "messages": [
+      {
+        "role": "system",
+        "content": "Select relevant follow-up checks for an engineer from the provided CANDIDATES. Every candidate is already validated against the final test verdict. Return ONLY one JSON object: {\"action_ids\": [\"exact candidate ID\"]}. Select 1 to 3 IDs. Copy IDs exactly. Do not write sentences, causes, settings, or new IDs."
+      },
+      {
+        "role": "user",
+        "content": "{\"overall\": \"ABORT\", \"CANDIDATES\": [{\"id\": \"S3.abort_record\", \"step_id\": \"S3\", \"reason_code\": \"ABORT_CONDITION_HIT\", \"text\": \"S3 단계: 중단 당시 측정 기록과 승인된 중단 조건을 대조한다.\"}, {\"id\": \"S3.recovery_review\", \"step_id\": \"S3\", \"reason_code\": \"ABORT_CONDITION_HIT\", \"text\": \"S3 단계의 승인된 복구절차를 검토하고 담당 엔지니어와 재시험 조건을 확인한다.\"}]}"
+      }
+    ],
+    "response": "{\"action_ids\": [\"S3.abort_record\", \"S3.recovery_review\"]}",
+    "sec": 1.2224427580076735
+  }
+]

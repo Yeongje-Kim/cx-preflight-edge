@@ -1,0 +1,16 @@
+[
+  {
+    "messages": [
+      {
+        "role": "system",
+        "content": "Select relevant follow-up checks for an engineer from the provided CANDIDATES. Every candidate is already validated against the final test verdict. Return ONLY one JSON object: {\"action_ids\": [\"exact candidate ID\"]}. Select 1 to 3 IDs. Copy IDs exactly. Do not write sentences, causes, settings, or new IDs."
+      },
+      {
+        "role": "user",
+        "content": "{\"overall\": \"HOLD\", \"CANDIDATES\": [{\"id\": \"S1.collection_window\", \"step_id\": \"S1\", \"reason_code\": \"STREAM_ENDED_EARLY\", \"text\": \"S1 단계: 승인 기준을 확인하고 시험 종료까지 측정 기록이 확보됐는지 검토한다.\"}]}"
+      }
+    ],
+    "response": "{\"action_ids\": [\"S1.collection_window\"]}",
+    "sec": 0.8301505450072
+  }
+]

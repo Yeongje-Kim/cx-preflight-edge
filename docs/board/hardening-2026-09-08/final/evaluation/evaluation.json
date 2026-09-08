@@ -1,0 +1,683 @@
+{
+  "started_utc": "2026-09-08T01:07:37.091899+00:00",
+  "model": "qualcomm/qwen3-4b-instruct-2507",
+  "comparison_scope": "Source conditions, timing, state change, title, action and recovery; engine wait budgets are explicit defaults, not extracted fields",
+  "procedures": [
+    {
+      "id": "cooling_n1-1",
+      "success": true,
+      "stats": {
+        "backend": "geniex-18181",
+        "steps": [
+          {
+            "step_id": "S1",
+            "attempts": 1,
+            "ok": true,
+            "error": null,
+            "sec": 9.727075736998813,
+            "issues": [],
+            "source_verified": true,
+            "narrative_source": "original",
+            "narrative_restored_fields": [
+              "rollback"
+            ]
+          },
+          {
+            "step_id": "S2",
+            "attempts": 1,
+            "ok": true,
+            "error": null,
+            "sec": 8.614073571006884,
+            "issues": [],
+            "source_verified": true,
+            "narrative_source": "original",
+            "narrative_restored_fields": []
+          },
+          {
+            "step_id": "S3",
+            "attempts": 1,
+            "ok": true,
+            "error": null,
+            "sec": 11.469757187005598,
+            "issues": [],
+            "source_verified": true,
+            "narrative_source": "original",
+            "narrative_restored_fields": [
+              "rollback"
+            ]
+          },
+          {
+            "step_id": "S4",
+            "attempts": 1,
+            "ok": true,
+            "error": null,
+            "sec": 10.0548040910071,
+            "issues": [],
+            "source_verified": true,
+            "narrative_source": "original",
+            "narrative_restored_fields": []
+          },
+          {
+            "step_id": "S5",
+            "attempts": 1,
+            "ok": true,
+            "error": null,
+            "sec": 8.691142163996119,
+            "issues": [],
+            "source_verified": true,
+            "narrative_source": "original",
+            "narrative_restored_fields": [
+              "rollback"
+            ]
+          },
+          {
+            "step_id": "S6",
+            "attempts": 1,
+            "ok": true,
+            "error": null,
+            "sec": 9.67612526199082,
+            "issues": [],
+            "source_verified": true,
+            "narrative_source": "original",
+            "narrative_restored_fields": [
+              "rollback"
+            ]
+          },
+          {
+            "step_id": "S7",
+            "attempts": 1,
+            "ok": true,
+            "error": null,
+            "sec": 9.547216153005138,
+            "issues": [],
+            "source_verified": true,
+            "narrative_source": "original",
+            "narrative_restored_fields": []
+          },
+          {
+            "step_id": "S8",
+            "attempts": 1,
+            "ok": true,
+            "error": null,
+            "sec": 11.660044283999014,
+            "issues": [],
+            "source_verified": true,
+            "narrative_source": "original",
+            "narrative_restored_fields": []
+          }
+        ],
+        "fallback_ids": [],
+        "source_check": "tagged-procedure-v2",
+        "n_source_verified": 8,
+        "n_ok": 8,
+        "n_total": 8,
+        "sec_total": 79.44023844900948
+      },
+      "mismatches": []
+    },
+    {
+      "id": "pump-1",
+      "success": true,
+      "stats": {
+        "backend": "geniex-18181",
+        "steps": [
+          {
+            "step_id": "S1",
+            "attempts": 1,
+            "ok": true,
+            "error": null,
+            "sec": 8.14055844998802,
+            "issues": [],
+            "source_verified": true,
+            "narrative_source": "original",
+            "narrative_restored_fields": [
+              "rollback"
+            ]
+          },
+          {
+            "step_id": "S2",
+            "attempts": 1,
+            "ok": true,
+            "error": null,
+            "sec": 7.724764562997734,
+            "issues": [],
+            "source_verified": true,
+            "narrative_source": "original",
+            "narrative_restored_fields": []
+          },
+          {
+            "step_id": "S3",
+            "attempts": 1,
+            "ok": true,
+            "error": null,
+            "sec": 6.051307779998751,
+            "issues": [],
+            "source_verified": true,
+            "narrative_source": "original",
+            "narrative_restored_fields": [
+              "rollback"
+            ]
+          }
+        ],
+        "fallback_ids": [],
+        "source_check": "tagged-procedure-v2",
+        "n_source_verified": 3,
+        "n_ok": 3,
+        "n_total": 3,
+        "sec_total": 21.916630792984506
+      },
+      "mismatches": []
+    },
+    {
+      "id": "ahu-1",
+      "success": true,
+      "stats": {
+        "backend": "geniex-18181",
+        "steps": [
+          {
+            "step_id": "S1",
+            "attempts": 1,
+            "ok": true,
+            "error": null,
+            "sec": 6.314897499993094,
+            "issues": [],
+            "source_verified": true,
+            "narrative_source": "original",
+            "narrative_restored_fields": [
+              "rollback"
+            ]
+          },
+          {
+            "step_id": "S2",
+            "attempts": 1,
+            "ok": true,
+            "error": null,
+            "sec": 6.547012126000482,
+            "issues": [],
+            "source_verified": true,
+            "narrative_source": "original",
+            "narrative_restored_fields": [
+              "rollback"
+            ]
+          }
+        ],
+        "fallback_ids": [],
+        "source_check": "tagged-procedure-v2",
+        "n_source_verified": 2,
+        "n_ok": 2,
+        "n_total": 2,
+        "sec_total": 12.861909625993576
+      },
+      "mismatches": []
+    },
+    {
+      "id": "valve-1",
+      "success": true,
+      "stats": {
+        "backend": "geniex-18181",
+        "steps": [
+          {
+            "step_id": "S1",
+            "attempts": 1,
+            "ok": true,
+            "error": null,
+            "sec": 6.185859082004754,
+            "issues": [],
+            "source_verified": true,
+            "narrative_source": "original",
+            "narrative_restored_fields": [
+              "rollback"
+            ]
+          },
+          {
+            "step_id": "S2",
+            "attempts": 2,
+            "ok": true,
+            "error": null,
+            "sec": 13.22090028700768,
+            "issues": [
+              "ValueError: S2.expected[0].within_sec: 원문 값 8.0, 추출 값 2.0; S2.expected[0].hold_sec: 원문 값 2.0, 추출 값 0.0"
+            ],
+            "source_verified": true,
+            "narrative_source": "original",
+            "narrative_restored_fields": []
+          }
+        ],
+        "fallback_ids": [],
+        "source_check": "tagged-procedure-v2",
+        "n_source_verified": 2,
+        "n_ok": 2,
+        "n_total": 2,
+        "sec_total": 19.406759369012434
+      },
+      "mismatches": []
+    },
+    {
+      "id": "pressure-1",
+      "success": true,
+      "stats": {
+        "backend": "geniex-18181",
+        "steps": [
+          {
+            "step_id": "S1",
+            "attempts": 1,
+            "ok": true,
+            "error": null,
+            "sec": 5.907258721999824,
+            "issues": [],
+            "source_verified": true,
+            "narrative_source": "original",
+            "narrative_restored_fields": []
+          },
+          {
+            "step_id": "S2",
+            "attempts": 1,
+            "ok": true,
+            "error": null,
+            "sec": 6.538415279996116,
+            "issues": [],
+            "source_verified": true,
+            "narrative_source": "original",
+            "narrative_restored_fields": []
+          }
+        ],
+        "fallback_ids": [],
+        "source_check": "tagged-procedure-v2",
+        "n_source_verified": 2,
+        "n_ok": 2,
+        "n_total": 2,
+        "sec_total": 12.44567400199594
+      },
+      "mismatches": []
+    },
+    {
+      "id": "boundaries-1",
+      "success": true,
+      "stats": {
+        "backend": "geniex-18181",
+        "steps": [
+          {
+            "step_id": "S1",
+            "attempts": 1,
+            "ok": true,
+            "error": null,
+            "sec": 6.393818297990947,
+            "issues": [],
+            "source_verified": true,
+            "narrative_source": "original",
+            "narrative_restored_fields": [
+              "rollback"
+            ]
+          },
+          {
+            "step_id": "S2",
+            "attempts": 1,
+            "ok": true,
+            "error": null,
+            "sec": 6.693506752999383,
+            "issues": [],
+            "source_verified": true,
+            "narrative_source": "original",
+            "narrative_restored_fields": [
+              "rollback"
+            ]
+          },
+          {
+            "step_id": "S3",
+            "attempts": 1,
+            "ok": true,
+            "error": null,
+            "sec": 6.154159840996726,
+            "issues": [],
+            "source_verified": true,
+            "narrative_source": "original",
+            "narrative_restored_fields": [
+              "rollback"
+            ]
+          }
+        ],
+        "fallback_ids": [],
+        "source_check": "tagged-procedure-v2",
+        "n_source_verified": 3,
+        "n_ok": 3,
+        "n_total": 3,
+        "sec_total": 19.241484891987056
+      },
+      "mismatches": []
+    }
+  ],
+  "reports": [
+    {
+      "case": "pass",
+      "overall": "PASS",
+      "expected_overall": "PASS",
+      "remarks": {
+        "summary_ko": "총 8개 단계가 모두 승인 기준 내에서 성립하여 시험 결과는 합격이다.",
+        "summary_source": "engine-template",
+        "actions_ko": [
+          "시험 기록을 승인 절차서와 함께 보관한다.",
+          "담당 엔지니어가 판정 근거를 검토하고 시험 기록의 최종 승인 여부를 확인한다."
+        ],
+        "action_ids": [
+          "record.archive",
+          "record.signoff"
+        ],
+        "action_checks": [
+          {
+            "id": "record.archive",
+            "step_id": null,
+            "reason_code": "EXPECTED_MET",
+            "text": "시험 기록을 승인 절차서와 함께 보관한다."
+          },
+          {
+            "id": "record.signoff",
+            "step_id": null,
+            "reason_code": "EXPECTED_MET",
+            "text": "담당 엔지니어가 판정 근거를 검토하고 시험 기록의 최종 승인 여부를 확인한다."
+          }
+        ],
+        "action_mode": "catalog-selection-v1",
+        "reason_codes": [
+          "EXPECTED_MET"
+        ],
+        "source": "geniex-18181",
+        "sec": 0.9917682249943027,
+        "selection": {
+          "attempts": 1,
+          "accepted": 2,
+          "rejected": 0,
+          "errors": []
+        }
+      },
+      "success": true
+    },
+    {
+      "case": "fail_start",
+      "overall": "FAIL",
+      "expected_overall": "FAIL",
+      "remarks": {
+        "summary_ko": "시험 결과는 불합격이다. S5 CH-2 운전 확인 단계의 사유: 대기기 기동 지연: CH2_STATUS == 1 조건이 허용시간 30초 내 성립하지 않음 (마감 t=58.0초, 실제 성립 72.0초, 마지막 값 0.00). 이후 3개 단계는 실행하지 않았다.",
+        "summary_source": "engine-template",
+        "actions_ko": [
+          "S5 단계: 기동 지령과 운전 상태의 기록을 대조한다.",
+          "S5 단계: 기동 시퀀스와 인터록의 동작 기록을 검토한다.",
+          "S5 단계의 승인된 복구절차를 검토하고 담당 엔지니어와 재시험 조건을 확인한다."
+        ],
+        "action_ids": [
+          "S5.start_sequence",
+          "S5.interlock_record",
+          "S5.recovery_review"
+        ],
+        "action_checks": [
+          {
+            "id": "S5.start_sequence",
+            "step_id": "S5",
+            "reason_code": "STANDBY_START_TIMEOUT",
+            "text": "S5 단계: 기동 지령과 운전 상태의 기록을 대조한다."
+          },
+          {
+            "id": "S5.interlock_record",
+            "step_id": "S5",
+            "reason_code": "STANDBY_START_TIMEOUT",
+            "text": "S5 단계: 기동 시퀀스와 인터록의 동작 기록을 검토한다."
+          },
+          {
+            "id": "S5.recovery_review",
+            "step_id": "S5",
+            "reason_code": "STANDBY_START_TIMEOUT",
+            "text": "S5 단계의 승인된 복구절차를 검토하고 담당 엔지니어와 재시험 조건을 확인한다."
+          }
+        ],
+        "action_mode": "catalog-selection-v1",
+        "reason_codes": [
+          "STANDBY_START_TIMEOUT",
+          "SKIPPED_AFTER_FAIL"
+        ],
+        "source": "geniex-18181",
+        "sec": 1.6683044529927429,
+        "selection": {
+          "attempts": 1,
+          "accepted": 3,
+          "rejected": 0,
+          "errors": []
+        }
+      },
+      "success": true
+    },
+    {
+      "case": "fail_temp",
+      "overall": "FAIL",
+      "expected_overall": "FAIL",
+      "remarks": {
+        "summary_ko": "시험 결과는 불합격이다. S7 냉수 공급온도 회복 단계의 사유: 온도 회복 지연: CHWS_T_SUP in [6, 8] 조건이 허용시간 60초 내 성립하지 않음 (마감 t=102.0초, 실제 성립 122.0초, 마지막 값 8.17). 이후 1개 단계는 실행하지 않았다.",
+        "summary_source": "engine-template",
+        "actions_ko": [
+          "S7 단계: 공급온도 추이와 운전 상태의 기록을 대조한다.",
+          "S7 단계: 냉수 유량과 펌프 운전 기록을 확인한다.",
+          "S7 단계의 승인된 복구절차를 검토하고 담당 엔지니어와 재시험 조건을 확인한다."
+        ],
+        "action_ids": [
+          "S7.temperature_trend",
+          "S7.flow_record",
+          "S7.recovery_review"
+        ],
+        "action_checks": [
+          {
+            "id": "S7.temperature_trend",
+            "step_id": "S7",
+            "reason_code": "TEMP_RECOVERY_TIMEOUT",
+            "text": "S7 단계: 공급온도 추이와 운전 상태의 기록을 대조한다."
+          },
+          {
+            "id": "S7.flow_record",
+            "step_id": "S7",
+            "reason_code": "TEMP_RECOVERY_TIMEOUT",
+            "text": "S7 단계: 냉수 유량과 펌프 운전 기록을 확인한다."
+          },
+          {
+            "id": "S7.recovery_review",
+            "step_id": "S7",
+            "reason_code": "TEMP_RECOVERY_TIMEOUT",
+            "text": "S7 단계의 승인된 복구절차를 검토하고 담당 엔지니어와 재시험 조건을 확인한다."
+          }
+        ],
+        "action_mode": "catalog-selection-v1",
+        "reason_codes": [
+          "TEMP_RECOVERY_TIMEOUT",
+          "SKIPPED_AFTER_FAIL"
+        ],
+        "source": "geniex-18181",
+        "sec": 1.6658240909891902,
+        "selection": {
+          "attempts": 1,
+          "accepted": 3,
+          "rejected": 0,
+          "errors": []
+        }
+      },
+      "success": true
+    },
+    {
+      "case": "fail_dropout",
+      "overall": "HOLD",
+      "expected_overall": "HOLD",
+      "remarks": {
+        "summary_ko": "S7 냉수 공급온도 회복 단계는 판정에 필요한 계측값이 없어 시스템이 판정하지 않았다(보류). 보류는 설비 불합격이 아니다. 계측 경로를 확인한 뒤 새 세션에서 재시험하거나 엔지니어가 근거를 직접 확인해 판정해야 한다. 이후 1개 단계는 실행하지 않았다.",
+        "summary_source": "engine-template",
+        "actions_ko": [
+          "S7 단계: 계측점의 통신 상태와 수집 경로를 확인한다.",
+          "S7 단계: 원본 측정 기록과 수집 로그를 대조해 결측 구간을 확인한다."
+        ],
+        "action_ids": [
+          "S7.measurement_path",
+          "S7.collection_record"
+        ],
+        "action_checks": [
+          {
+            "id": "S7.measurement_path",
+            "step_id": "S7",
+            "reason_code": "TAG_MISSING_DATA",
+            "text": "S7 단계: 계측점의 통신 상태와 수집 경로를 확인한다."
+          },
+          {
+            "id": "S7.collection_record",
+            "step_id": "S7",
+            "reason_code": "TAG_MISSING_DATA",
+            "text": "S7 단계: 원본 측정 기록과 수집 로그를 대조해 결측 구간을 확인한다."
+          }
+        ],
+        "action_mode": "catalog-selection-v1",
+        "reason_codes": [
+          "TAG_MISSING_DATA",
+          "SKIPPED_AFTER_HOLD"
+        ],
+        "source": "geniex-18181",
+        "sec": 1.200191669006017,
+        "selection": {
+          "attempts": 1,
+          "accepted": 2,
+          "rejected": 0,
+          "errors": []
+        }
+      },
+      "success": true
+    },
+    {
+      "case": "no_start",
+      "overall": "FAIL",
+      "expected_overall": "FAIL",
+      "remarks": {
+        "summary_ko": "시험 결과는 불합격이다. S5 CH-2 운전 확인 단계의 사유: 대기기 기동 지연: CH2_STATUS == 1 조건이 허용시간 30초 내 성립하지 않음 (마감 t=58.0초, 종료 시까지 미성립, 마지막 값 0.00). 이후 3개 단계는 실행하지 않았다.",
+        "summary_source": "engine-template",
+        "actions_ko": [
+          "S5 단계: 기동 지령과 운전 상태의 기록을 대조한다.",
+          "S5 단계: 기동 시퀀스와 인터록의 동작 기록을 검토한다.",
+          "S5 단계의 승인된 복구절차를 검토하고 담당 엔지니어와 재시험 조건을 확인한다."
+        ],
+        "action_ids": [
+          "S5.start_sequence",
+          "S5.interlock_record",
+          "S5.recovery_review"
+        ],
+        "action_checks": [
+          {
+            "id": "S5.start_sequence",
+            "step_id": "S5",
+            "reason_code": "STANDBY_START_TIMEOUT",
+            "text": "S5 단계: 기동 지령과 운전 상태의 기록을 대조한다."
+          },
+          {
+            "id": "S5.interlock_record",
+            "step_id": "S5",
+            "reason_code": "STANDBY_START_TIMEOUT",
+            "text": "S5 단계: 기동 시퀀스와 인터록의 동작 기록을 검토한다."
+          },
+          {
+            "id": "S5.recovery_review",
+            "step_id": "S5",
+            "reason_code": "STANDBY_START_TIMEOUT",
+            "text": "S5 단계의 승인된 복구절차를 검토하고 담당 엔지니어와 재시험 조건을 확인한다."
+          }
+        ],
+        "action_mode": "catalog-selection-v1",
+        "reason_codes": [
+          "STANDBY_START_TIMEOUT",
+          "SKIPPED_AFTER_FAIL"
+        ],
+        "source": "geniex-18181",
+        "sec": 1.6679486119974172,
+        "selection": {
+          "attempts": 1,
+          "accepted": 3,
+          "rejected": 0,
+          "errors": []
+        }
+      },
+      "success": true
+    },
+    {
+      "case": "abort",
+      "overall": "ABORT",
+      "expected_overall": "ABORT",
+      "remarks": {
+        "summary_ko": "시험 결과는 중단이다. S3 CH-1 모의 트립 단계의 사유: 중단 조건 발생: CHWS_T_SUP > 14 (t=25.0초, 값 20.00). 이후 5개 단계는 실행하지 않았다.",
+        "summary_source": "engine-template",
+        "actions_ko": [
+          "S3 단계: 중단 당시 측정 기록과 승인된 중단 조건을 대조한다.",
+          "S3 단계의 승인된 복구절차를 검토하고 담당 엔지니어와 재시험 조건을 확인한다."
+        ],
+        "action_ids": [
+          "S3.abort_record",
+          "S3.recovery_review"
+        ],
+        "action_checks": [
+          {
+            "id": "S3.abort_record",
+            "step_id": "S3",
+            "reason_code": "ABORT_CONDITION_HIT",
+            "text": "S3 단계: 중단 당시 측정 기록과 승인된 중단 조건을 대조한다."
+          },
+          {
+            "id": "S3.recovery_review",
+            "step_id": "S3",
+            "reason_code": "ABORT_CONDITION_HIT",
+            "text": "S3 단계의 승인된 복구절차를 검토하고 담당 엔지니어와 재시험 조건을 확인한다."
+          }
+        ],
+        "action_mode": "catalog-selection-v1",
+        "reason_codes": [
+          "ABORT_CONDITION_HIT",
+          "SKIPPED_AFTER_FAIL"
+        ],
+        "source": "geniex-18181",
+        "sec": 1.2225670290063135,
+        "selection": {
+          "attempts": 1,
+          "accepted": 2,
+          "rejected": 0,
+          "errors": []
+        }
+      },
+      "success": true
+    },
+    {
+      "case": "short_stream",
+      "overall": "HOLD",
+      "expected_overall": "HOLD",
+      "remarks": {
+        "summary_ko": "S1 초기 상태 확인 단계는 판정에 필요한 계측값이 없어 시스템이 판정하지 않았다(보류). 보류는 설비 불합격이 아니다. 계측 경로를 확인한 뒤 새 세션에서 재시험하거나 엔지니어가 근거를 직접 확인해 판정해야 한다. 이후 7개 단계는 실행하지 않았다.",
+        "summary_source": "engine-template",
+        "actions_ko": [
+          "S1 단계: 승인 기준을 확인하고 시험 종료까지 측정 기록이 확보됐는지 검토한다."
+        ],
+        "action_ids": [
+          "S1.collection_window"
+        ],
+        "action_checks": [
+          {
+            "id": "S1.collection_window",
+            "step_id": "S1",
+            "reason_code": "STREAM_ENDED_EARLY",
+            "text": "S1 단계: 승인 기준을 확인하고 시험 종료까지 측정 기록이 확보됐는지 검토한다."
+          }
+        ],
+        "action_mode": "catalog-selection-v1",
+        "reason_codes": [
+          "STREAM_ENDED_EARLY",
+          "SKIPPED_AFTER_HOLD"
+        ],
+        "source": "geniex-18181",
+        "sec": 0.8302635670115706,
+        "selection": {
+          "attempts": 1,
+          "accepted": 1,
+          "rejected": 0,
+          "errors": []
+        }
+      },
+      "success": true
+    }
+  ],
+  "success": true,
+  "finished_utc": "2026-09-08T01:10:31.741149+00:00"
+}

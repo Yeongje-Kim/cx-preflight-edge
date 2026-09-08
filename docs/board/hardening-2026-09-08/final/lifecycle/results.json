@@ -1,0 +1,535 @@
+{
+  "started_utc": "2026-09-08T01:10:33.040324+00:00",
+  "trials": [
+    {
+      "case": "pass",
+      "expected": "PASS",
+      "session": "cx-20260907-181033-d5be",
+      "backend": "geniex-18181",
+      "extraction": {
+        "backend": "geniex-18181",
+        "steps": [
+          {
+            "step_id": "S1",
+            "attempts": 1,
+            "ok": true,
+            "error": null,
+            "sec": 9.280047947002458,
+            "issues": [],
+            "source_verified": true,
+            "narrative_source": "original",
+            "narrative_restored_fields": [
+              "rollback"
+            ]
+          },
+          {
+            "step_id": "S2",
+            "attempts": 1,
+            "ok": true,
+            "error": null,
+            "sec": 8.445861729996977,
+            "issues": [],
+            "source_verified": true,
+            "narrative_source": "original",
+            "narrative_restored_fields": []
+          },
+          {
+            "step_id": "S3",
+            "attempts": 1,
+            "ok": true,
+            "error": null,
+            "sec": 11.533658286993159,
+            "issues": [],
+            "source_verified": true,
+            "narrative_source": "original",
+            "narrative_restored_fields": [
+              "rollback"
+            ]
+          },
+          {
+            "step_id": "S4",
+            "attempts": 1,
+            "ok": true,
+            "error": null,
+            "sec": 10.013125219993526,
+            "issues": [],
+            "source_verified": true,
+            "narrative_source": "original",
+            "narrative_restored_fields": []
+          },
+          {
+            "step_id": "S5",
+            "attempts": 1,
+            "ok": true,
+            "error": null,
+            "sec": 8.668641997006489,
+            "issues": [],
+            "source_verified": true,
+            "narrative_source": "original",
+            "narrative_restored_fields": [
+              "rollback"
+            ]
+          },
+          {
+            "step_id": "S6",
+            "attempts": 1,
+            "ok": true,
+            "error": null,
+            "sec": 9.663744759003748,
+            "issues": [],
+            "source_verified": true,
+            "narrative_source": "original",
+            "narrative_restored_fields": [
+              "rollback"
+            ]
+          },
+          {
+            "step_id": "S7",
+            "attempts": 1,
+            "ok": true,
+            "error": null,
+            "sec": 9.49247254699003,
+            "issues": [],
+            "source_verified": true,
+            "narrative_source": "original",
+            "narrative_restored_fields": []
+          },
+          {
+            "step_id": "S8",
+            "attempts": 1,
+            "ok": true,
+            "error": null,
+            "sec": 12.035332443992957,
+            "issues": [],
+            "source_verified": true,
+            "narrative_source": "original",
+            "narrative_restored_fields": []
+          }
+        ],
+        "fallback_ids": [],
+        "source_check": "tagged-procedure-v2",
+        "n_source_verified": 8,
+        "n_ok": 8,
+        "n_total": 8,
+        "sec_total": 79.13288493097934
+      },
+      "all_conditions_from_ai": true,
+      "overall": "PASS",
+      "timings": {
+        "extract_sec": 79.13821397299762,
+        "run_wall_sec": 0.042281677000573836,
+        "latency_ms_max": 0.2855230122804642,
+        "report_sec": 0.9901471619959921,
+        "report_llm_sec": 0.9854939030046808
+      },
+      "report_source": "geniex-18181",
+      "action_ids": [
+        "record.archive",
+        "record.signoff"
+      ],
+      "selection": {
+        "attempts": 1,
+        "accepted": 2,
+        "rejected": 0,
+        "errors": []
+      },
+      "report_review": {
+        "summary_source": "engine-template",
+        "actions_guard_passed": true,
+        "actions_ko": [
+          "시험 기록을 승인 절차서와 함께 보관한다.",
+          "담당 엔지니어가 판정 근거를 검토하고 시험 기록의 최종 승인 여부를 확인한다."
+        ]
+      },
+      "blocked": {
+        "rerun": 409,
+        "reapprove": 409,
+        "force_reapprove": 409
+      },
+      "history_unchanged_after_rejected_requests": true,
+      "sse": {
+        "run_start": 1,
+        "verdict": 8,
+        "report": 1,
+        "done": 1
+      },
+      "regenerated_report_kept_facts": true,
+      "regenerated_report_source": "geniex-18181",
+      "success": true
+    },
+    {
+      "case": "fail_start",
+      "expected": "FAIL",
+      "session": "cx-20260907-181201-c230",
+      "backend": "geniex-18181",
+      "extraction": {
+        "backend": "geniex-18181",
+        "steps": [
+          {
+            "step_id": "S1",
+            "attempts": 1,
+            "ok": true,
+            "error": null,
+            "sec": 9.281187209999189,
+            "issues": [],
+            "source_verified": true,
+            "narrative_source": "original",
+            "narrative_restored_fields": [
+              "rollback"
+            ]
+          },
+          {
+            "step_id": "S2",
+            "attempts": 1,
+            "ok": true,
+            "error": null,
+            "sec": 8.354830409996794,
+            "issues": [],
+            "source_verified": true,
+            "narrative_source": "original",
+            "narrative_restored_fields": []
+          },
+          {
+            "step_id": "S3",
+            "attempts": 1,
+            "ok": true,
+            "error": null,
+            "sec": 11.201594291997026,
+            "issues": [],
+            "source_verified": true,
+            "narrative_source": "original",
+            "narrative_restored_fields": [
+              "rollback"
+            ]
+          },
+          {
+            "step_id": "S4",
+            "attempts": 1,
+            "ok": true,
+            "error": null,
+            "sec": 10.066982495001866,
+            "issues": [],
+            "source_verified": true,
+            "narrative_source": "original",
+            "narrative_restored_fields": []
+          },
+          {
+            "step_id": "S5",
+            "attempts": 1,
+            "ok": true,
+            "error": null,
+            "sec": 9.053206646989565,
+            "issues": [],
+            "source_verified": true,
+            "narrative_source": "original",
+            "narrative_restored_fields": [
+              "rollback"
+            ]
+          },
+          {
+            "step_id": "S6",
+            "attempts": 1,
+            "ok": true,
+            "error": null,
+            "sec": 10.049953711000853,
+            "issues": [],
+            "source_verified": true,
+            "narrative_source": "original",
+            "narrative_restored_fields": [
+              "rollback"
+            ]
+          },
+          {
+            "step_id": "S7",
+            "attempts": 1,
+            "ok": true,
+            "error": null,
+            "sec": 9.802069412005949,
+            "issues": [],
+            "source_verified": true,
+            "narrative_source": "original",
+            "narrative_restored_fields": []
+          },
+          {
+            "step_id": "S8",
+            "attempts": 1,
+            "ok": true,
+            "error": null,
+            "sec": 11.683784053006093,
+            "issues": [],
+            "source_verified": true,
+            "narrative_source": "original",
+            "narrative_restored_fields": []
+          }
+        ],
+        "fallback_ids": [],
+        "source_check": "tagged-procedure-v2",
+        "n_source_verified": 8,
+        "n_ok": 8,
+        "n_total": 8,
+        "sec_total": 79.49360822999734
+      },
+      "all_conditions_from_ai": true,
+      "overall": "FAIL",
+      "timings": {
+        "extract_sec": 79.49676601399551,
+        "run_wall_sec": 0.029134937998605892,
+        "latency_ms_max": 0.19359501311555505,
+        "report_sec": 1.656271817992092,
+        "report_llm_sec": 1.6547130060062045
+      },
+      "report_source": "geniex-18181",
+      "action_ids": [
+        "S5.start_sequence",
+        "S5.interlock_record",
+        "S5.recovery_review"
+      ],
+      "selection": {
+        "attempts": 1,
+        "accepted": 3,
+        "rejected": 0,
+        "errors": []
+      },
+      "report_review": {
+        "summary_source": "engine-template",
+        "actions_guard_passed": true,
+        "actions_ko": [
+          "S5 단계: 기동 지령과 운전 상태의 기록을 대조한다.",
+          "S5 단계: 기동 시퀀스와 인터록의 동작 기록을 검토한다.",
+          "S5 단계의 승인된 복구절차를 검토하고 담당 엔지니어와 재시험 조건을 확인한다."
+        ]
+      },
+      "blocked": {
+        "rerun": 409,
+        "reapprove": 409,
+        "force_reapprove": 409
+      },
+      "history_unchanged_after_rejected_requests": true,
+      "sse": {
+        "run_start": 1,
+        "verdict": 8,
+        "report": 1,
+        "done": 1
+      },
+      "regenerated_report_kept_facts": true,
+      "regenerated_report_source": "geniex-18181",
+      "success": true
+    },
+    {
+      "case": "fail_dropout",
+      "expected": "HOLD",
+      "session": "cx-20260907-181330-c0b9",
+      "backend": "geniex-18181",
+      "extraction": {
+        "backend": "geniex-18181",
+        "steps": [
+          {
+            "step_id": "S1",
+            "attempts": 1,
+            "ok": true,
+            "error": null,
+            "sec": 9.262779744007275,
+            "issues": [],
+            "source_verified": true,
+            "narrative_source": "original",
+            "narrative_restored_fields": [
+              "rollback"
+            ]
+          },
+          {
+            "step_id": "S2",
+            "attempts": 1,
+            "ok": true,
+            "error": null,
+            "sec": 8.475494832004188,
+            "issues": [],
+            "source_verified": true,
+            "narrative_source": "original",
+            "narrative_restored_fields": []
+          },
+          {
+            "step_id": "S3",
+            "attempts": 1,
+            "ok": true,
+            "error": null,
+            "sec": 11.582638470004895,
+            "issues": [],
+            "source_verified": true,
+            "narrative_source": "original",
+            "narrative_restored_fields": [
+              "rollback"
+            ]
+          },
+          {
+            "step_id": "S4",
+            "attempts": 1,
+            "ok": true,
+            "error": null,
+            "sec": 9.911956162992283,
+            "issues": [],
+            "source_verified": true,
+            "narrative_source": "original",
+            "narrative_restored_fields": []
+          },
+          {
+            "step_id": "S5",
+            "attempts": 1,
+            "ok": true,
+            "error": null,
+            "sec": 8.955717662000097,
+            "issues": [],
+            "source_verified": true,
+            "narrative_source": "original",
+            "narrative_restored_fields": [
+              "rollback"
+            ]
+          },
+          {
+            "step_id": "S6",
+            "attempts": 1,
+            "ok": true,
+            "error": null,
+            "sec": 9.684174327005167,
+            "issues": [],
+            "source_verified": true,
+            "narrative_source": "original",
+            "narrative_restored_fields": [
+              "rollback"
+            ]
+          },
+          {
+            "step_id": "S7",
+            "attempts": 1,
+            "ok": true,
+            "error": null,
+            "sec": 9.95209406199865,
+            "issues": [],
+            "source_verified": true,
+            "narrative_source": "original",
+            "narrative_restored_fields": []
+          },
+          {
+            "step_id": "S8",
+            "attempts": 1,
+            "ok": true,
+            "error": null,
+            "sec": 11.996159453003202,
+            "issues": [],
+            "source_verified": true,
+            "narrative_source": "original",
+            "narrative_restored_fields": []
+          }
+        ],
+        "fallback_ids": [],
+        "source_check": "tagged-procedure-v2",
+        "n_source_verified": 8,
+        "n_ok": 8,
+        "n_total": 8,
+        "sec_total": 79.82101471301576
+      },
+      "all_conditions_from_ai": true,
+      "overall": "HOLD",
+      "timings": {
+        "extract_sec": 79.82408551599656,
+        "run_wall_sec": 0.03374367799551692,
+        "latency_ms_max": 0.0997400056803599,
+        "report_sec": 1.1923353739985032,
+        "report_llm_sec": 1.1908152590040118
+      },
+      "report_source": "geniex-18181",
+      "action_ids": [
+        "S7.measurement_path",
+        "S7.collection_record"
+      ],
+      "selection": {
+        "attempts": 1,
+        "accepted": 2,
+        "rejected": 0,
+        "errors": []
+      },
+      "report_review": {
+        "summary_source": "engine-template",
+        "actions_guard_passed": true,
+        "actions_ko": [
+          "S7 단계: 계측점의 통신 상태와 수집 경로를 확인한다.",
+          "S7 단계: 원본 측정 기록과 수집 로그를 대조해 결측 구간을 확인한다."
+        ]
+      },
+      "blocked": {
+        "rerun": 409,
+        "reapprove": 409,
+        "force_reapprove": 409
+      },
+      "history_unchanged_after_rejected_requests": true,
+      "sse": {
+        "run_start": 1,
+        "verdict": 8,
+        "report": 1,
+        "done": 1
+      },
+      "regenerated_report_kept_facts": true,
+      "regenerated_report_source": "geniex-18181",
+      "success": true
+    }
+  ],
+  "success": true,
+  "code_commit": "9c30880cf20f36e59e4b5cea03eadb05a06c524a",
+  "verified_file_count": 74,
+  "environment": {
+    "machine": "aarch64",
+    "python": "3.12.3",
+    "platform": "Linux-6.8.12-4-qc2509-aarch64-with-glibc2.39",
+    "cpu_count": 8
+  },
+  "npu_runtime": {
+    "pid": 57849,
+    "libraries": [
+      "libQnnHtp.so",
+      "libQnnHtpNetRunExtensions.so",
+      "libQnnHtpV73Stub.so",
+      "libQnnSystem.so"
+    ],
+    "devices": [
+      "/dev/fastrpc-cdsp1-secure"
+    ]
+  },
+  "llm": {
+    "backend": "geniex-18181",
+    "alive": true
+  },
+  "offline_start": {
+    "dns_blocked": true,
+    "connect_blocked": true,
+    "default_route": false,
+    "wan_iface": null,
+    "tx_delta_bytes": 0,
+    "platform": "Linux",
+    "external_ifaces": [],
+    "no_external_iface": true,
+    "is_offline": true,
+    "offline_score": 4,
+    "cpu_load1": 1.23,
+    "mem_used_mb": 7371,
+    "mem_total_mb": 35213,
+    "proc_rss_mb": 53
+  },
+  "network_namespace": "net:[4026533692]",
+  "new_trial_isolation": true,
+  "offline_end": {
+    "dns_blocked": true,
+    "connect_blocked": true,
+    "default_route": false,
+    "wan_iface": null,
+    "tx_delta_bytes": 0,
+    "platform": "Linux",
+    "external_ifaces": [],
+    "no_external_iface": true,
+    "is_offline": true,
+    "offline_score": 4,
+    "cpu_load1": 1.07,
+    "mem_used_mb": 7398,
+    "mem_total_mb": 35213,
+    "proc_rss_mb": 58
+  },
+  "finished_utc": "2026-09-08T01:14:59.308829+00:00"
+}

@@ -1,0 +1,48 @@
+{
+  "success": true,
+  "trials": [
+    {
+      "case": "pass",
+      "session": "cx-20260907-181033-d5be",
+      "overall": "PASS",
+      "unchanged": true,
+      "hashes": {
+        "rules.executed.json": "828de1fd3b8653dcf11f283bb7431641b64ae191a9f11612bec2811f4981d31d",
+        "rules.approved.json": "828de1fd3b8653dcf11f283bb7431641b64ae191a9f11612bec2811f4981d31d",
+        "facts.json": "9a28987ca886ee1330804cf7b46e1692ab63d7805f8f50042da4490995fb1fef",
+        "verdicts.jsonl": "55ef6ac99cdad6cca9c14e901a555676decb8718c93732fd47fb56ca94bd8414",
+        "telemetry.csv": "42845493b56061d71da76f48c5ce111497f92512e3ab482f7dd508d16f79d13c",
+        "report.md": "52528b1d72457853124758364e4891b43bb3468094a96a2cb641ffa141f823b0"
+      }
+    },
+    {
+      "case": "fail_start",
+      "session": "cx-20260907-181201-c230",
+      "overall": "FAIL",
+      "unchanged": true,
+      "hashes": {
+        "rules.executed.json": "828de1fd3b8653dcf11f283bb7431641b64ae191a9f11612bec2811f4981d31d",
+        "rules.approved.json": "828de1fd3b8653dcf11f283bb7431641b64ae191a9f11612bec2811f4981d31d",
+        "facts.json": "84bf44a0b74683a0457fce404ce9dd7db4895f606529702268609794dced0d58",
+        "verdicts.jsonl": "012a9e10b024f25902547e9fff7b92b3db51795382683dde8a117329fbaf11fe",
+        "telemetry.csv": "0df2038122ceec30672e87d31558089e55efd15c685789277e20f6e61de16bd0",
+        "report.md": "c3e34bec092e06766379aa0174db35dddbac43b40605bf2dd81f4b00a82c9484"
+      }
+    },
+    {
+      "case": "fail_dropout",
+      "session": "cx-20260907-181330-c0b9",
+      "overall": "HOLD",
+      "unchanged": true,
+      "hashes": {
+        "rules.executed.json": "828de1fd3b8653dcf11f283bb7431641b64ae191a9f11612bec2811f4981d31d",
+        "rules.approved.json": "828de1fd3b8653dcf11f283bb7431641b64ae191a9f11612bec2811f4981d31d",
+        "facts.json": "0066e013f8c20ff6b71d2a36ff9c7bd7eca362b84e377185676bebf6e201a2fe",
+        "verdicts.jsonl": "e41d9f7d1a94a543830443785f6562bb2b4b32f4c96ea0a123af020ed5005676",
+        "telemetry.csv": "fb818694f81c6ac5a583a2c17c711addbf4e42bd71a85a490c80c7123f5bb5ec",
+        "report.md": "ed1ac6cb7b67830c60819422522591312ba023e3cefe9b47f85b81d4e3b47d97"
+      }
+    }
+  ],
+  "mode": "fresh server process, saved NPU histories, no new AI generation"
+}

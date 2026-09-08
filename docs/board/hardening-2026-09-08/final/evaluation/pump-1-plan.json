@@ -1,0 +1,91 @@
+{
+  "plan_id": "IST-EVAL-PUMP",
+  "title": "순환펌프 기동과 유량 확인",
+  "equipment": [],
+  "steps": [
+    {
+      "id": "S1",
+      "title": "초기 압력 확인",
+      "action": "펌프 정지 상태와 공급압력을 확인한다.",
+      "preconditions": [
+        {
+          "tag": "P1_STATUS",
+          "op": "==",
+          "value": 0.0,
+          "band": null
+        }
+      ],
+      "trigger": null,
+      "expected": [
+        {
+          "tag": "SUPPLY_PRESSURE",
+          "op": ">=",
+          "value": 2.5,
+          "band": null,
+          "within_sec": 10.0,
+          "hold_sec": 2.0
+        }
+      ],
+      "abort_conditions": [],
+      "rollback": [],
+      "changes_state": false,
+      "precond_wait_sec": 10.0,
+      "trigger_wait_sec": 120.0,
+      "source_text": "### S1 초기 압력 확인\n- 조치: 펌프 정지 상태와 공급압력을 확인한다.\n- 사전조건: P1_STATUS = 0\n- 기대 결과: SUPPLY_PRESSURE >= 2.5 kPa를 2초 이상 유지. 허용시간 10초.\n- 복구: 해당 없음(상태 변경 없음)\n- 상태 변경: 없음"
+    },
+    {
+      "id": "S2",
+      "title": "펌프 기동",
+      "action": "P1 기동 지령을 모의 입력한다.",
+      "preconditions": [],
+      "trigger": {
+        "tag": "P1_CMD",
+        "op": "==",
+        "value": 1.0,
+        "band": null
+      },
+      "expected": [
+        {
+          "tag": "P1_STATUS",
+          "op": "==",
+          "value": 1.0,
+          "band": null,
+          "within_sec": 15.0,
+          "hold_sec": 0.0
+        }
+      ],
+      "abort_conditions": [],
+      "rollback": [
+        "승인된 절차에 따라 P1을 정지한다."
+      ],
+      "changes_state": true,
+      "precond_wait_sec": 10.0,
+      "trigger_wait_sec": 120.0,
+      "source_text": "### S2 펌프 기동\n- 조치: P1 기동 지령을 모의 입력한다.\n- 트리거: P1_CMD = 1\n- 기대 결과: P1_STATUS = 1이 15초 이내 성립\n- 복구: 승인된 절차에 따라 P1을 정지한다.\n- 상태 변경: 있음"
+    },
+    {
+      "id": "S3",
+      "title": "유량 안정",
+      "action": "유량 추이를 확인한다.",
+      "preconditions": [],
+      "trigger": null,
+      "expected": [
+        {
+          "tag": "FLOW_RATE",
+          "op": ">=",
+          "value": 12.5,
+          "band": null,
+          "within_sec": 30.0,
+          "hold_sec": 5.0
+        }
+      ],
+      "abort_conditions": [],
+      "rollback": [],
+      "changes_state": false,
+      "precond_wait_sec": 10.0,
+      "trigger_wait_sec": 120.0,
+      "source_text": "### S3 유량 안정\n- 조치: 유량 추이를 확인한다.\n- 기대 결과: FLOW_RATE >= 12.5 L/s를 5초 이상 유지. 허용시간 30초.\n- 복구: 해당 없음(상태 변경 없음)\n- 상태 변경: 없음"
+    }
+  ],
+  "tag_aliases": {}
+}

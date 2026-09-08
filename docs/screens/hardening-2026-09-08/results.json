@@ -1,0 +1,65 @@
+{
+  "results": [
+    {
+      "case": "preflight_warn",
+      "blocked": true
+    },
+    {
+      "case": "pass",
+      "overall": "PASS",
+      "card": "PASS\nS8 정상 상태 복구\n기대 결과 충족: CH2_STATUS == 0 (40.0초 소요)\ncodeEXPECTED_MET\ntagCH2_STATUS\n기준CH2_STATUS == 0\n허용90 s\n마감t=220 s\n판정 시각t=170 s\n마지막 값0\n지연0.044 ms",
+      "sid": "cx-20260907-180113-70c4",
+      "exceeded": []
+    },
+    {
+      "case": "fail_start",
+      "overall": "FAIL",
+      "card": "FAIL\nS5 CH-2 운전 확인\n대기기 기동 지연: CH2_STATUS == 1 조건이 허용시간 30초 내 성립하지 않음 (마감 t=58.0초, 종료 시까지 미성립, 마지막 값 0.00)\ncodeSTANDBY_START_TIMEOUT\ntagCH2_STATUS\n기준CH2_STATUS == 1\n허용30 s\n마감t=58 s\n실제 성립t=72 s\n마지막 값0\n지연0.044 ms",
+      "sid": "cx-20260907-180114-f24a",
+      "exceeded": [
+        {
+          "type": "segment",
+          "step_id": "S5",
+          "kind": "exceeded",
+          "state": null,
+          "t0": 58,
+          "t1": 72
+        }
+      ]
+    },
+    {
+      "case": "fail_temp",
+      "overall": "FAIL",
+      "card": "FAIL\nS7 냉수 공급온도 회복\n온도 회복 지연: CHWS_T_SUP in [6, 8] 조건이 허용시간 60초 내 성립하지 않음 (마감 t=102.0초, 종료 시까지 미성립, 마지막 값 8.17)\ncodeTEMP_RECOVERY_TIMEOUT\ntagCHWS_T_SUP\n기준CHWS_T_SUP in [6, 8]\n허용60 s\n마감t=102 s\n실제 성립t=122 s\n마지막 값8.168\n지연0.071 ms",
+      "sid": "cx-20260907-180114-d165",
+      "exceeded": [
+        {
+          "type": "segment",
+          "step_id": "S7",
+          "kind": "exceeded",
+          "state": null,
+          "t0": 102,
+          "t1": 122
+        }
+      ]
+    },
+    {
+      "case": "fail_dropout",
+      "overall": "HOLD",
+      "card": "HOLD\nS7 냉수 공급온도 회복\n판정 보류 - 계측 결측: CHWS_T_SUP 값이 5초 이상 수신되지 않아 판정하지 않음 (t=65.0초). 엔지니어 확인 필요\ncodeTAG_MISSING_DATA\ntagCHWS_T_SUP\n판정 시각t=65 s\n경과5 s\n지연0.042 ms",
+      "sid": "cx-20260907-180115-265a",
+      "exceeded": []
+    }
+  ],
+  "errors": [],
+  "reopened": true,
+  "historyReadOnly": true,
+  "newTrialIsolation": true,
+  "creationFailureRecovered": true,
+  "responsive": [
+    1600,
+    1280,
+    768,
+    390
+  ]
+}
