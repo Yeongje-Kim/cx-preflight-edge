@@ -1,5 +1,7 @@
 # 보드 실측 원자료 (2026-09-06)
 
+최신 세션 보존·문안 보완 코드의 실제 NPU 결과는 [후속 재검증](recheck-2026-09-07/README.md)에 있습니다. 아래 자료는 당시 측정 상태를 보존합니다.
+
 Radxa Fogwise AIRbox Q900 (Qualcomm IQ-9075 / QCS9075), Ubuntu 24.04.3 LTS, aarch64 8코어, RAM 35,213 MB.
 온디바이스 LLM은 Qwen3-4B-Instruct-2507(w4a16)을 GenieX 서버(127.0.0.1:18181)로 띄워 사용했다.
 집계 결과는 `../metrics.md` 4절에 있다.

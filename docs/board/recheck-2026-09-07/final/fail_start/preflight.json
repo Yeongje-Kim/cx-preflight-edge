@@ -1,0 +1,15 @@
+{
+  "rule": [],
+  "ai": [
+    {
+      "code": "PF02_ORDER_CONTRADICTION",
+      "severity": "WARN",
+      "step_id": "S3",
+      "message": "AI 후보: S3의 사전 조건인 CH1_STATUS == 1, CH2_STATUS == 0는 S1에서 정의된 결과이지만, S8의 사전 조건인 CH2_STATUS == 1이 S3의 예상 결과와 충돌",
+      "evidence": {},
+      "source": "ai_suggestion"
+    }
+  ],
+  "n_error": 0,
+  "n_warn": 0
+}

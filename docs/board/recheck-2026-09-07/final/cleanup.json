@@ -1,0 +1,13 @@
+{
+  "finished_utc": "2026-09-08T00:01:21.069877+00:00",
+  "owned_units": {
+    "cxpe-npu-recheck-d8291a6": "inactive",
+    "cxpe-server": "inactive",
+    "cxpe-geniex": "inactive"
+  },
+  "listeners_on_test_ports": [],
+  "other_project_services": "not modified",
+  "model_and_runtime_configuration": "not modified",
+  "original_checkout": "not overwritten",
+  "original_server_busy_sessions": []
+}

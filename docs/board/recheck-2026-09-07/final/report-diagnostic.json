@@ -1,0 +1,57 @@
+{
+  "purpose": "Separate diagnostic requests after the final lifecycle run; not the original rejected responses.",
+  "started_utc": "2026-09-07T23:59:51.876452+00:00",
+  "cases": [
+    {
+      "case": "pass",
+      "raw": "{\"actions_ko\": [\"CH1 모의 트립 후 CH2 운전 상태 확인\", \"CH2_CMD와 CH2_STATUS의 동기화 점검\", \"다음 시험에서 CHWS_T_SUP의 유지 범위 재검토\"], \"reason_codes\": [\"EXPECTED_MET\", \"EXPECTED_MET\", \"EXPECTED_MET\"]}",
+      "checks": [
+        {
+          "text": "CH1 모의 트립 후 CH2 운전 상태 확인",
+          "accepted": false
+        },
+        {
+          "text": "CH2_CMD와 CH2_STATUS의 동기화 점검",
+          "accepted": true
+        },
+        {
+          "text": "다음 시험에서 CHWS_T_SUP의 유지 범위 재검토",
+          "accepted": true
+        }
+      ]
+    },
+    {
+      "case": "fail_start",
+      "raw": "{\"actions_ko\": [\"S5 단계의 CH2_STATUS=1 조건이 30초 허용시간 내 충족되지 않음을 확인\", \"다음 작동에서 CH2_STATUS의 기동 지연 요인 조사\"], \"reason_codes\": [\"STANDBY_START_TIMEOUT\", \"SKIPPED_AFTER_FAIL\"]}",
+      "checks": [
+        {
+          "text": "S5 단계의 CH2_STATUS=1 조건이 30초 허용시간 내 충족되지 않음을 확인",
+          "accepted": false
+        },
+        {
+          "text": "다음 작동에서 CH2_STATUS의 기동 지연 요인 조사",
+          "accepted": true
+        }
+      ]
+    },
+    {
+      "case": "fail_dropout",
+      "raw": "{\"actions_ko\": [\"CHWS_T_SUP 태그의 5초 이상 수신 누락 확인: 65.0초 시점에서 데이터 누락 가능\", \"이전 단계의 HOLD 판정과 관련된 재검토 필요\", \"단계 S8의 스텝 스키pping과의 일관성 확인\"], \"reason_codes\": [\"TAG_MISSING_DATA\", \"SKIPPED_AFTER_HOLD\"]}",
+      "checks": [
+        {
+          "text": "CHWS_T_SUP 태그의 5초 이상 수신 누락 확인: 65.0초 시점에서 데이터 누락 가능",
+          "accepted": false
+        },
+        {
+          "text": "이전 단계의 HOLD 판정과 관련된 재검토 필요",
+          "accepted": true
+        },
+        {
+          "text": "단계 S8의 스텝 스키pping과의 일관성 확인",
+          "accepted": true
+        }
+      ]
+    }
+  ],
+  "finished_utc": "2026-09-08T00:00:17.020191+00:00"
+}

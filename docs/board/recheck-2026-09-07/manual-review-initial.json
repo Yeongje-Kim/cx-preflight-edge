@@ -1,0 +1,28 @@
+{
+  "scope": "Manual review after the initial workflow checks on commit 9385058",
+  "passed": false,
+  "issues": [
+    {
+      "case": "pass",
+      "field": "actions_ko",
+      "finding": "Observed duration 40 seconds was recommended as a new limit."
+    },
+    {
+      "case": "fail_start",
+      "field": "summary_ko",
+      "finding": "The free-text summary described remaining steps as passed while also mentioning skipped steps."
+    },
+    {
+      "case": "fail_dropout",
+      "field": "actions_ko",
+      "finding": "Corrupted characters were present in a recommendation."
+    }
+  ],
+  "follow_up_commit": "d8291a6b978bf3779d60676a8066236f79e5b785",
+  "changes": [
+    "Engine-derived summary",
+    "No numeric limits in AI recommendations",
+    "Corrupted-character guard",
+    "Template fallback on invalid recommendations"
+  ]
+}

@@ -1,0 +1,73 @@
+{
+  "id": "cx-20260907-162928-88f6",
+  "created_unix_ms": 1788823768984,
+  "plan_id": "IST-COOL-N1-01",
+  "case": "fail_start",
+  "backend": "geniex-18181",
+  "offline": {
+    "dns_blocked": false,
+    "connect_blocked": false,
+    "default_route": true,
+    "wan_iface": "wlp1s0",
+    "tx_delta_bytes": 726,
+    "platform": "Linux",
+    "external_ifaces": [
+      "end0",
+      "end1",
+      "tailscale0",
+      "wlp1s0"
+    ],
+    "no_external_iface": false,
+    "is_offline": false,
+    "offline_score": 0,
+    "cpu_load1": 1.07,
+    "mem_used_mb": 7889,
+    "mem_total_mb": 35213,
+    "proc_rss_mb": 59
+  },
+  "timings": {
+    "extract_sec": 87.52495670699864,
+    "run_wall_sec": 0.15806087300006766,
+    "latency_ms_max": 0.19239399989601225,
+    "report_sec": 10.85830003900628,
+    "report_llm_sec": 10.856275102007203
+  },
+  "summary": {
+    "status": "finished",
+    "telemetry": "fail_start",
+    "mode": "llm",
+    "preflight_errors": 0,
+    "preflight_warnings": 0,
+    "extract": {
+      "backend": "geniex-18181",
+      "fallback_ids": [],
+      "source_check": "tagged-procedure-v1",
+      "n_source_verified": 8,
+      "n_ok": 8,
+      "n_total": 8,
+      "sec_total": 87.52339129900793
+    },
+    "approved_by": "board-recheck",
+    "approved_at": 1788823862.0165381,
+    "approved_with_errors": 0,
+    "speed": 0.0,
+    "seed": 0,
+    "run_started_at": 1788823862.03225,
+    "overall": "FAIL",
+    "states": {
+      "S1": "PASS",
+      "S2": "PASS",
+      "S3": "PASS",
+      "S4": "PASS",
+      "S5": "FAIL",
+      "S6": "SKIPPED",
+      "S7": "SKIPPED",
+      "S8": "SKIPPED"
+    },
+    "n_pass": 4,
+    "n_fail": 1,
+    "n_hold": 0,
+    "n_skipped": 3,
+    "label_overall": "FAIL"
+  }
+}

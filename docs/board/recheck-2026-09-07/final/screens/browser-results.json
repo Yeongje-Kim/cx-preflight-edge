@@ -1,0 +1,26 @@
+{
+  "rows": [
+    {
+      "case": "pass",
+      "session": "cx-20260907-164820-5617",
+      "overall": "PASS",
+      "historyReadOnly": true,
+      "reportSource": "문안 출처 template(llm-guard)"
+    },
+    {
+      "case": "fail_start",
+      "session": "cx-20260907-165005-b971",
+      "overall": "FAIL",
+      "historyReadOnly": true,
+      "reportSource": "문안 출처 template(llm-guard)"
+    },
+    {
+      "case": "fail_dropout",
+      "session": "cx-20260907-165148-98b2",
+      "overall": "HOLD",
+      "historyReadOnly": true,
+      "reportSource": "문안 출처 template(llm-guard)"
+    }
+  ],
+  "errors": []
+}

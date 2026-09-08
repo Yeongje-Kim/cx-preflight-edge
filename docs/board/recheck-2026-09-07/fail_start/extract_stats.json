@@ -1,0 +1,85 @@
+{
+  "backend": "geniex-18181",
+  "steps": [
+    {
+      "step_id": "S1",
+      "attempts": 1,
+      "ok": true,
+      "error": null,
+      "sec": 8.75001264900493,
+      "issues": [],
+      "source_verified": true
+    },
+    {
+      "step_id": "S2",
+      "attempts": 2,
+      "ok": true,
+      "error": null,
+      "sec": 17.473385199991753,
+      "issues": [
+        "ValueError: S2.expected[0].op: 원문 값 '>=', 추출 값 '=='"
+      ],
+      "source_verified": true
+    },
+    {
+      "step_id": "S3",
+      "attempts": 1,
+      "ok": true,
+      "error": null,
+      "sec": 11.344971422004164,
+      "issues": [],
+      "source_verified": true
+    },
+    {
+      "step_id": "S4",
+      "attempts": 1,
+      "ok": true,
+      "error": null,
+      "sec": 9.765617951998138,
+      "issues": [],
+      "source_verified": true
+    },
+    {
+      "step_id": "S5",
+      "attempts": 1,
+      "ok": true,
+      "error": null,
+      "sec": 8.730173326999648,
+      "issues": [],
+      "source_verified": true
+    },
+    {
+      "step_id": "S6",
+      "attempts": 1,
+      "ok": true,
+      "error": null,
+      "sec": 10.024826517998008,
+      "issues": [],
+      "source_verified": true
+    },
+    {
+      "step_id": "S7",
+      "attempts": 1,
+      "ok": true,
+      "error": null,
+      "sec": 9.673471368005266,
+      "issues": [],
+      "source_verified": true
+    },
+    {
+      "step_id": "S8",
+      "attempts": 1,
+      "ok": true,
+      "error": null,
+      "sec": 11.760932863006019,
+      "issues": [],
+      "source_verified": true
+    }
+  ],
+  "fallback_ids": [],
+  "source_check": "tagged-procedure-v1",
+  "n_source_verified": 8,
+  "n_ok": 8,
+  "n_total": 8,
+  "sec_total": 87.52339129900793
+}
