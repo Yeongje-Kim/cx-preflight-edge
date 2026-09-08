@@ -34,9 +34,9 @@ def dns_blocked(host: str = "example.com", timeout: float = 1.0) -> bool:
         socket.setdefaulttimeout(old)
 
 
-def connect_blocked(addr: tuple[str, int] = ("1.1.1.1", 443), timeout: float = 1.0) -> bool:
+def connect_blocked(addr: tuple[str, int] = ("1.1.1.1", 443), timeout: float = 1.0) -> Optional[bool]:
     if os.environ.get("CXPE_SKIP_CONNECT_PROBE") == "1":
-        return True
+        return None  # A skipped probe is unknown, not evidence of isolation.
     try:
         with socket.create_connection(addr, timeout=timeout):
             return False
@@ -50,6 +50,12 @@ def default_route_present() -> Optional[bool]:
             for line in Path("/proc/net/route").read_text().splitlines()[1:]:
                 parts = line.split()
                 if len(parts) > 1 and parts[1] == "00000000":
+                    return True
+            # IPv6 defaults count too; ignore the kernel's unreachable placeholder.
+            for line in Path("/proc/net/ipv6_route").read_text().splitlines():
+                parts = line.split()
+                if (len(parts) >= 10 and parts[0] == "0" * 32 and parts[1] == "00"
+                        and int(parts[8], 16) & 1 and not int(parts[8], 16) & 0x200):
                     return True
             return False
         except Exception:
@@ -82,14 +88,14 @@ def wan_iface() -> Optional[str]:
     return None
 
 
-def external_ifaces() -> list[str]:
+def external_ifaces() -> Optional[list[str]]:
     """루프백을 뺀 네트워크 인터페이스 목록. 비어 있으면 외부로 나갈 통로 자체가 없다."""
     if not _IS_LINUX:
-        return []
+        return None
     try:
         return sorted(p.name for p in Path("/sys/class/net").iterdir() if p.name != "lo")
     except Exception:
-        return []
+        return None
 
 
 def tx_bytes(iface: Optional[str]) -> Optional[int]:
@@ -161,7 +167,7 @@ def status(meter: Optional[UplinkMeter] = None) -> dict:
     }
     # 루프백 말고 인터페이스가 하나도 없으면 송신할 통로 자체가 없다. 가장 강한 형태의 폐쇄망이다.
     d["external_ifaces"] = external_ifaces()
-    d["no_external_iface"] = _IS_LINUX and not d["external_ifaces"]
+    d["no_external_iface"] = _IS_LINUX and d["external_ifaces"] == []
     if d["no_external_iface"]:
         d["wan_iface"] = None
         d["tx_delta_bytes"] = 0

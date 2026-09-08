@@ -1,0 +1,57 @@
+{
+  "plan_id": "IST-EVAL-PRESSURE",
+  "title": "차압 범위와 상한 확인",
+  "equipment": [],
+  "steps": [
+    {
+      "id": "S1",
+      "title": "상한 확인",
+      "action": "차압 상한을 확인한다.",
+      "preconditions": [],
+      "trigger": null,
+      "expected": [
+        {
+          "tag": "PUMP_DIFF_P",
+          "op": "<=",
+          "value": 1.25,
+          "band": null,
+          "within_sec": 10.0,
+          "hold_sec": 0.0
+        }
+      ],
+      "abort_conditions": [],
+      "rollback": [],
+      "changes_state": false,
+      "precond_wait_sec": 10.0,
+      "trigger_wait_sec": 120.0,
+      "source_text": "### S1 상한 확인\n- 조치: 차압 상한을 확인한다.\n- 기대 결과: PUMP_DIFF_P <= 1.25 kPa. 허용시간 10초.\n- 복구: 해당 없음(상태 변경 없음)\n- 상태 변경: 없음"
+    },
+    {
+      "id": "S2",
+      "title": "차압 안정 확인",
+      "action": "차압의 부호와 안정 구간을 확인한다.",
+      "preconditions": [],
+      "trigger": null,
+      "expected": [
+        {
+          "tag": "ZONE_DIFF_P",
+          "op": "in_band",
+          "value": null,
+          "band": [
+            -1.5,
+            2.5
+          ],
+          "within_sec": 20.0,
+          "hold_sec": 4.0
+        }
+      ],
+      "abort_conditions": [],
+      "rollback": [],
+      "changes_state": false,
+      "precond_wait_sec": 10.0,
+      "trigger_wait_sec": 120.0,
+      "source_text": "### S2 차압 안정 확인\n- 조치: 차압의 부호와 안정 구간을 확인한다.\n- 기대 결과: ZONE_DIFF_P -1.5~2.5를 4초 유지. 허용시간 20초.\n- 복구: 해당 없음(상태 변경 없음)\n- 상태 변경: 없음"
+    }
+  ],
+  "tag_aliases": {}
+}

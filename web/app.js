@@ -46,7 +46,7 @@ async function statusLoop() {
       const off = $("badge-offline");
       if (o.is_offline) { off.className = "badge ok"; off.textContent = "외부 통신 차단 확인"; }
       else { off.className = "badge bad"; off.textContent = `외부 통신 차단 미확인 ${o.offline_score ?? "-"}/4`; }
-      $("network-detail").textContent = `네트워크 점검: DNS ${o.dns_blocked ? "차단" : "가능"}, TCP ${o.connect_blocked ? "차단" : "가능"}, 기본경로 ${o.default_route === false ? "없음" : o.default_route === true ? "있음" : "미확인"}`;
+      $("network-detail").textContent = `네트워크 점검: DNS ${o.dns_blocked ? "차단" : "가능"}, TCP ${o.connect_blocked === true ? "차단" : o.connect_blocked === false ? "가능" : "미확인"}, 기본경로 ${o.default_route === false ? "없음" : o.default_route === true ? "있음" : "미확인"}`;
       const llm = $("badge-llm");
       if (d.llm && d.llm.alive) { llm.className = "badge ok"; llm.textContent = `온디바이스 AI 연결됨`; }
       else { llm.className = "badge unknown"; llm.textContent = "AI 미연결 · 기준 문서 사용"; }
@@ -285,7 +285,7 @@ async function loadReport(ev) {
   if (S.sid !== sid) return;
   if (!response.ok) throw new Error("시험 기록을 불러오지 못했습니다");
   $("report").textContent = text;
-  $("report-meta").textContent = `문안 출처 ${ev.source}, ${(ev.sec || 0).toFixed(1)}s`;
+  $("report-meta").textContent = `점검 항목 선택 ${ev.source}, ${(ev.sec || 0).toFixed(1)}s`;
 }
 
 async function regenReport() {
@@ -611,7 +611,7 @@ async function loadExisting(sid) {
     updateChart(); renderTimeline(); renderMimic(S.mimicFreeze ? S.mimicFreeze.vals : S.lastVals, S.mimicFreeze || { t: S.now }); renderLiveExpect(); setElapsed();
     setStats(s, null);
     $("run-status").textContent = `${s.telemetry || ""}  저장본  인터페이스 송신 증가 ${d.meta.offline && d.meta.offline.tx_delta_bytes != null ? d.meta.offline.tx_delta_bytes + " B" : "미측정"}`;
-    if (d.has_report) { $("report").textContent = await (await fetch(`${API}/sessions/${sid}/report`)).text(); $("report-meta").textContent = `문안 출처 ${(d.remarks || {}).source || "-"}`; $("btn-report").disabled = false; }
+    if (d.has_report) { $("report").textContent = await (await fetch(`${API}/sessions/${sid}/report`)).text(); $("report-meta").textContent = `점검 항목 선택 ${(d.remarks || {}).source || "-"}`; $("btn-report").disabled = false; }
     setMode("run");
   }
 }

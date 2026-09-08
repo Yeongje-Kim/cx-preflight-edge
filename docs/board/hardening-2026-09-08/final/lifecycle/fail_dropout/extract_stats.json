@@ -1,0 +1,107 @@
+{
+  "backend": "geniex-18181",
+  "steps": [
+    {
+      "step_id": "S1",
+      "attempts": 1,
+      "ok": true,
+      "error": null,
+      "sec": 9.262779744007275,
+      "issues": [],
+      "source_verified": true,
+      "narrative_source": "original",
+      "narrative_restored_fields": [
+        "rollback"
+      ]
+    },
+    {
+      "step_id": "S2",
+      "attempts": 1,
+      "ok": true,
+      "error": null,
+      "sec": 8.475494832004188,
+      "issues": [],
+      "source_verified": true,
+      "narrative_source": "original",
+      "narrative_restored_fields": []
+    },
+    {
+      "step_id": "S3",
+      "attempts": 1,
+      "ok": true,
+      "error": null,
+      "sec": 11.582638470004895,
+      "issues": [],
+      "source_verified": true,
+      "narrative_source": "original",
+      "narrative_restored_fields": [
+        "rollback"
+      ]
+    },
+    {
+      "step_id": "S4",
+      "attempts": 1,
+      "ok": true,
+      "error": null,
+      "sec": 9.911956162992283,
+      "issues": [],
+      "source_verified": true,
+      "narrative_source": "original",
+      "narrative_restored_fields": []
+    },
+    {
+      "step_id": "S5",
+      "attempts": 1,
+      "ok": true,
+      "error": null,
+      "sec": 8.955717662000097,
+      "issues": [],
+      "source_verified": true,
+      "narrative_source": "original",
+      "narrative_restored_fields": [
+        "rollback"
+      ]
+    },
+    {
+      "step_id": "S6",
+      "attempts": 1,
+      "ok": true,
+      "error": null,
+      "sec": 9.684174327005167,
+      "issues": [],
+      "source_verified": true,
+      "narrative_source": "original",
+      "narrative_restored_fields": [
+        "rollback"
+      ]
+    },
+    {
+      "step_id": "S7",
+      "attempts": 1,
+      "ok": true,
+      "error": null,
+      "sec": 9.95209406199865,
+      "issues": [],
+      "source_verified": true,
+      "narrative_source": "original",
+      "narrative_restored_fields": []
+    },
+    {
+      "step_id": "S8",
+      "attempts": 1,
+      "ok": true,
+      "error": null,
+      "sec": 11.996159453003202,
+      "issues": [],
+      "source_verified": true,
+      "narrative_source": "original",
+      "narrative_restored_fields": []
+    }
+  ],
+  "fallback_ids": [],
+  "source_check": "tagged-procedure-v2",
+  "n_source_verified": 8,
+  "n_ok": 8,
+  "n_total": 8,
+  "sec_total": 79.82101471301576
+}

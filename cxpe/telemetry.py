@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import csv
+import math
 import time
 from pathlib import Path
 from typing import Iterator, Optional
@@ -10,6 +11,8 @@ from .schemas import Sample
 
 
 def write_csv(rows: list[Sample], path: Path, columns: Optional[list[str]] = None) -> None:
+    if not rows and not columns:
+        raise ValueError("빈 측정값을 저장할 때는 열 이름이 필요합니다")
     cols = columns or list(rows[0].keys())
     path.parent.mkdir(parents=True, exist_ok=True)
     with path.open("w", newline="", encoding="utf-8") as f:
@@ -21,15 +24,31 @@ def write_csv(rows: list[Sample], path: Path, columns: Optional[list[str]] = Non
 
 def read_csv(path: Path) -> list[Sample]:
     out: list[Sample] = []
-    with path.open(encoding="utf-8") as f:
-        for rec in csv.DictReader(f):
+    with path.open(encoding="utf-8-sig", newline="") as source:
+        reader = csv.DictReader(source)
+        columns = [c.strip() for c in (reader.fieldnames or [])]
+        if "t_sec" not in columns or len(set(columns)) != len(columns) or any(not c for c in columns):
+            raise ValueError("CSV는 중복 없는 열 이름과 t_sec 열이 필요합니다")
+        reader.fieldnames = columns
+        previous = None
+        for number, record in enumerate(reader, 2):
+            if None in record:
+                raise ValueError(f"CSV {number}행: 열 수가 헤더보다 많습니다")
             row: Sample = {}
-            for k, v in rec.items():
-                if k is None:
-                    continue
-                v = (v or "").strip()
-                row[k] = None if v == "" else float(v)
+            for key, value in record.items():
+                value = (value or "").strip()
+                try:
+                    parsed = None if not value else float(value)
+                except ValueError as error:
+                    raise ValueError(f"CSV {number}행 {key}: 숫자 또는 빈칸이 필요합니다") from error
+                row[key] = parsed if parsed is not None and math.isfinite(parsed) else None
+            timestamp = row["t_sec"]
+            if timestamp is None or previous is not None and timestamp <= previous:
+                raise ValueError(f"CSV {number}행: t_sec는 유한하고 증가해야 합니다")
+            previous = timestamp
             out.append(row)
+    if not out:
+        raise ValueError("CSV에 측정값이 없습니다")
     return out
 
 

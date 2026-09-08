@@ -29,6 +29,8 @@ EXTRACT_SYSTEM = (
     "(e.g. CH1_STATUS, CHWS_T_SUP). trigger is null when the text has no 트리거. rollback is a list of short "
     "Korean strings from 복구. changes_state is true only when the text says 상태 변경: 있음. "
     "Korean timing: 허용시간 30초 means within_sec=30; 10초 이상 유지 means hold_sec=10. "
+    "Both N초 유지 and N초 이상 유지 mean hold_sec=N, even when a separate sentence gives 허용시간. "
+    "One condition may have BOTH a deadline and a hold duration; do not create a second condition for timing. "
     "Do not swap them. 이상 means >= (not >); 이하 means <=; 초과 means >; 미만 means <. "
     "Example: LOAD_KW 200 kW 이상을 10초 이상 유지. 허용시간 30초 => "
     "tag=LOAD_KW, op=>=, value=200, within_sec=30, hold_sec=10. "
@@ -76,18 +78,15 @@ def contradiction_messages(step_summaries: list[dict]) -> list[dict[str, str]]:
 
 
 REPORT_SYSTEM = (
-    "You suggest follow-up checks for an engineer reviewing a Korean data-center commissioning record. "
-    "FACTS already contain the final verdict. The application writes the factual summary itself. "
-    'Output ONLY one JSON object: {"actions_ko": [str], "reason_codes": [str]}. '
-    "Write 1-3 short, readable Korean recommendations for review, evidence collection or record keeping. "
-    "Do not write a summary or reclassify passed, failed, held or skipped steps. "
-    "Never propose or repeat numeric time, temperature, capacity or other acceptance limits. "
-    "Observed durations are not requirements. Digits may appear only in equipment, tag or step identifiers from FACTS. "
-    "Do not invent a cause or recommend changing equipment settings. The engineer decides any intervention. "
-    "Use complete Korean sentences without garbled characters. Use only reason codes from FACTS."
+    "Select relevant follow-up checks for an engineer from the provided CANDIDATES. "
+    "Every candidate is already validated against the final test verdict. "
+    'Return ONLY one JSON object: {"action_ids": ["exact candidate ID"]}. '
+    "Select 1 to 3 IDs. Copy IDs exactly. Do not write sentences, causes, settings, or new IDs."
 )
 
 
 def report_messages(facts: dict) -> list[dict[str, str]]:
-    user = "FACTS:\n" + json.dumps(facts, ensure_ascii=False)
-    return [{"role": "system", "content": REPORT_SYSTEM}, {"role": "user", "content": user}]
+    from .actions import action_candidates
+    context = {"overall": facts["overall"], "CANDIDATES": action_candidates(facts)}
+    return [{"role": "system", "content": REPORT_SYSTEM},
+            {"role": "user", "content": json.dumps(context, ensure_ascii=False)}]

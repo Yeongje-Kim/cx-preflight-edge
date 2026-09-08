@@ -8,13 +8,14 @@
 from __future__ import annotations
 
 import json
+import math
 import re
 import time
 from typing import Optional
 
 from ..schemas import Finding, PreflightCode, Severity, Step, TagList, TestPlan
 from .client import LlmClient, LlmError
-from .source_guard import validate_source
+from .source_guard import validate_source, source_narrative, source_reference
 from .prompts import contradiction_messages, extraction_messages, mapping_messages
 
 _THINK = re.compile(r"<think>.*?</think>", re.S)
@@ -107,9 +108,10 @@ def _merge_orphan_timing(items: object) -> object:
 
 def _normalize_step(d: dict, step_id: str, title: str, source_text: str) -> dict:
     d = dict(d)
-    d.setdefault("id", step_id)
-    d.setdefault("title", title)
-    d["id"] = step_id
+    # Instruction and recovery prose must be the original text, not a model paraphrase.
+    d.update(source_narrative(source_text))
+    d["precond_wait_sec"] = 10.0
+    d["trigger_wait_sec"] = 120.0
     d["source_text"] = source_text
     if d.get("trigger") in ({}, "", "null"):
         d["trigger"] = None
@@ -128,6 +130,11 @@ def extract_step(client: LlmClient, step_id: str, title: str, text: str, max_tok
                  retries: int = 2) -> tuple[Optional[Step], dict]:
     """단계 1개 추출. (Step|None, stats)."""
     stats = {"step_id": step_id, "attempts": 0, "ok": False, "error": None, "sec": 0.0, "issues": []}
+    try:
+        source_reference(text)
+    except ValueError as error:
+        stats.update(error=str(error), issues=[str(error)], failure_kind="unsupported_source")
+        return None, stats
     messages = extraction_messages(text)
     t0 = time.perf_counter()
     last_err: Optional[str] = None
@@ -137,9 +144,13 @@ def extract_step(client: LlmClient, step_id: str, title: str, text: str, max_tok
         try:
             raw = client.complete(messages, max_tokens=max_tokens, json_mode=True)
             data = parse_json_loose(raw)
+            original = source_narrative(text)
+            restored = [key for key, value in original.items() if data.get(key) != value]
             step = Step.model_validate(_normalize_step(data, step_id, title, text))
             validate_source(step, text)
             stats["source_verified"] = True
+            stats["narrative_source"] = "original"
+            stats["narrative_restored_fields"] = restored
             stats["ok"] = True
             stats["sec"] = time.perf_counter() - t0
             return step, stats
@@ -151,8 +162,8 @@ def extract_step(client: LlmClient, step_id: str, title: str, text: str, max_tok
         messages = messages + [
             {"role": "assistant", "content": "(invalid)\n" + raw[:4000]},
             {"role": "user", "content": "Your previous output did not fit the schema. Error:\n"
-                                        + (last_err or "")[:400]
-                                        + "\nFix exactly these fields and output ONLY the JSON object."},
+                                        + (last_err or "")[:1600]
+                                        + "\nCorrect ALL listed mismatches together, including condition count, within_sec and hold_sec. Output ONLY the JSON object."},
         ]
     stats["error"] = last_err
     stats["sec"] = time.perf_counter() - t0
@@ -187,7 +198,7 @@ def extract_plan(md: str, client: LlmClient, golden: Optional[TestPlan] = None,
     plan = TestPlan(plan_id=plan_id, title=title, steps=steps,
                     equipment=golden.equipment if golden else [], tag_aliases=golden.tag_aliases if golden else {})
     stats = {"backend": getattr(client, "name", "?"), "steps": per_step, "fallback_ids": fallback_ids,
-             "source_check": "tagged-procedure-v1",
+             "source_check": "tagged-procedure-v2",
              "n_source_verified": sum(1 for s in per_step if s.get("source_verified")),
              "n_ok": sum(1 for s in per_step if s["ok"]), "n_total": len(per_step),
              "sec_total": sum(s["sec"] for s in per_step)}
@@ -203,6 +214,9 @@ def map_tags(plan: TestPlan, tags: TagList, client: LlmClient) -> list[Finding]:
     try:
         raw = client.complete(mapping_messages(names, rows), max_tokens=300, json_mode=True)
         data = parse_json_loose(raw)
+        items = data.get("mappings", [])
+        if not isinstance(items, list) or any(not isinstance(item, dict) for item in items):
+            raise ValueError("AI suggestion must be a list of objects")
     except Exception as e:
         return [Finding(code=PreflightCode.PF04_TAG_UNMAPPED, severity=Severity.WARN, step_id=None,
                         message=f"AI 태그 매핑 제안 실패: {type(e).__name__}", source="ai_suggestion")]
@@ -210,7 +224,12 @@ def map_tags(plan: TestPlan, tags: TagList, client: LlmClient) -> list[Finding]:
     valid = tags.names()
     for m in data.get("mappings", []) or []:
         name, tag = m.get("name"), m.get("tag")
-        conf = float(m.get("confidence") or 0)
+        try:
+            conf = float(m.get("confidence", 0))
+        except (TypeError, ValueError):
+            continue
+        if not math.isfinite(conf) or not 0 <= conf <= 1 or not isinstance(name, str) or not isinstance(tag, str):
+            continue
         if name not in names:
             continue
         if tag in valid:
@@ -234,6 +253,9 @@ def find_contradictions(plan: TestPlan, client: LlmClient) -> list[Finding]:
     try:
         raw = client.complete(contradiction_messages(summaries), max_tokens=300, json_mode=True)
         data = parse_json_loose(raw)
+        items = data.get("candidates", [])
+        if not isinstance(items, list) or any(not isinstance(item, dict) for item in items):
+            raise ValueError("AI suggestion must be a list of objects")
     except Exception as e:
         return [Finding(code=PreflightCode.PF02_ORDER_CONTRADICTION, severity=Severity.WARN, step_id=None,
                         message=f"AI 모순 후보 탐색 실패: {type(e).__name__}", source="ai_suggestion")]
@@ -243,7 +265,7 @@ def find_contradictions(plan: TestPlan, client: LlmClient) -> list[Finding]:
         sid = c.get("step_id")
         kind = str(c.get("kind", "PF02")).upper()
         code = PreflightCode.PF06_THRESHOLD_CONFLICT if kind == "PF06" else PreflightCode.PF02_ORDER_CONTRADICTION
-        if sid not in ids:
+        if not isinstance(sid, str) or sid not in ids or not isinstance(c.get("message"), str):
             continue
         out.append(Finding(code=code, severity=Severity.WARN, step_id=sid,
                            message=f"AI 후보: {c.get('message', '')}", source="ai_suggestion"))

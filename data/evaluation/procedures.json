@@ -1,0 +1,592 @@
+[
+  {
+    "id": "cooling_n1",
+    "origin": "existing synthetic demo",
+    "markdown": "# 통합시운전 시험절차서 IST-COOL-N1-01\n## 냉동기 N+1 자동 전환 시험 (냉수 계통)\n\n> 본 문서는 Cx-Preflight Edge 기능검증용 예시 절차서다. 모든 수치(허용시간, 온도 범위, 부하)는\n> 임의 설정값이며, 실제 적용 시에는 프로젝트별 승인 시험계획서의 기준을 사용한다.\n\n## 1. 시험 개요\n- 목적: 주 냉동기 CH-1 트립 시 대기 냉동기 CH-2와 냉수펌프 CHWP-2가 자동 기동하고, 냉수 공급온도가 허용 범위로 회복됨을 확인한다.\n- 대상 설비: 냉동기 CH-1(주), 냉동기 CH-2(대기), 냉수펌프 CHWP-2, 냉수 공급온도 센서 TT-CHWS-01, 부하기 LB-01\n- 관련 시퀀스: SOO-COOL-01 §3.2 대기기 자동 전환\n- 시험 등급: Level 4 통합시스템시험(IST), 부하기 200 kW 인가 상태\n\n## 2. 공통 사전조건\n- BMS 트렌드 기록 1초 주기 활성\n- 부하기 LB-01 200 kW 이상 인가, 30초 이상 안정\n- 냉수 공급온도 6~8 °C\n\n## 3. 공통 중단 조건\n- 냉수 공급온도(CHWS_T_SUP)가 14 °C를 초과하면 시험을 중단하고 CH-1을 수동 복구한다.\n\n## 4. 시험 단계\n\n### S1 초기 상태 확인\n- 조치: 시험 시작 전 설비 상태를 BMS 화면에서 확인한다.\n- 사전조건: CH-1 운전 중(CH1_STATUS = 1), CH-2 정지(CH2_STATUS = 0)\n- 기대 결과: 냉수 공급온도(CHWS_T_SUP) 6~8 °C를 10초 이상 유지. 허용시간 20초.\n- 복구: 해당 없음(상태 변경 없음)\n\n### S2 부하 안정 확인\n- 조치: 부하기 LB-01 출력을 200 kW로 유지한다.\n- 사전조건: 부하기 운전 중(LOAD_KW > 0)\n- 기대 결과: LOAD_KW 200 kW 이상을 10초 이상 유지. 허용시간 30초.\n- 복구: 부하기 출력을 0 kW로 하강한다.\n- 상태 변경: 있음\n\n### S3 CH-1 모의 트립\n- 조치: CH-1 트립 접점을 모의 입력한다.\n- 사전조건: CH1_STATUS = 1, CH2_STATUS = 0\n- 트리거: CH1_TRIP = 1 (접점 입력 시각을 단계 시작으로 본다)\n- 기대 결과: CH-1 정지(CH1_STATUS = 0) 5초 이내\n- 중단 조건: CHWS_T_SUP > 14 °C\n- 복구: 트립 접점을 복구하고 CH-1을 재기동한다.\n- 상태 변경: 있음\n\n### S4 대기기 기동 지령 확인\n- 조치: BMS 자동 전환 로직의 기동 지령 출력을 확인한다.\n- 사전조건: CH1_TRIP = 1\n- 기대 결과: CH2_CMD = 1 이 10초 이내 출력\n- 중단 조건: CHWS_T_SUP > 14 °C\n- 복구: 자동 전환 로직을 비활성하고 수동 운전으로 전환한다.\n\n### S5 CH-2 운전 확인\n- 조치: CH-2 기동 및 운전 상태를 확인한다.\n- 사전조건: CH2_CMD = 1\n- 기대 결과: CH2_STATUS = 1 이 30초 이내 성립\n- 중단 조건: CHWS_T_SUP > 14 °C\n- 복구: CH-2를 수동 정지한다.\n- 상태 변경: 있음\n\n### S6 냉수펌프 CHWP-2 연동 기동\n- 조치: CH-2 운전에 연동한 냉수펌프 기동을 확인한다.\n- 사전조건: CH2_STATUS = 1\n- 기대 결과: CHWP2_STATUS = 1 이 20초 이내 성립\n- 중단 조건: CHWS_T_SUP > 14 °C\n- 복구: CHWP-2를 수동 정지한다.\n- 상태 변경: 있음\n\n### S7 냉수 공급온도 회복\n- 조치: 공급온도 트렌드를 관찰한다.\n- 사전조건: CHWP2_STATUS = 1\n- 기대 결과: CHWS_T_SUP 6~8 °C로 60초 이내 회복하고 10초 이상 유지\n- 중단 조건: CHWS_T_SUP > 14 °C\n- 복구: CH-1을 수동 재기동한다.\n\n### S8 정상 상태 복구\n- 조치: 트립 접점을 복구하고 CH-1을 재기동한 뒤 CH-2를 대기로 복귀시킨다.\n- 사전조건: CH2_STATUS = 1\n- 트리거: CH1_TRIP = 0 (접점 복구 확인 시각을 단계 시작으로 본다)\n- 기대 결과: CH1_STATUS = 1 이 60초 이내, CH2_STATUS = 0 이 90초 이내\n- 복구: 수동 운전으로 전환한다.\n- 상태 변경: 있음\n\n## 5. 기록\n각 단계의 시작·종료 시각, 판정(PASS/FAIL/ABORT), 판정 근거가 된 태그 값과 시각을 기록한다.\n",
+    "expected": {
+      "plan_id": "IST-COOL-N1-01",
+      "title": "냉동기 N+1 자동 전환 시험 (냉수 계통)",
+      "equipment": [
+        "CH-1",
+        "CH-2",
+        "CHWP-2",
+        "TT-CHWS-01",
+        "LB-01"
+      ],
+      "tag_aliases": {},
+      "steps": [
+        {
+          "id": "S1",
+          "title": "초기 상태 확인",
+          "action": "시험 시작 전 설비 상태를 BMS 화면에서 확인한다.",
+          "preconditions": [
+            {
+              "tag": "CH1_STATUS",
+              "op": "==",
+              "value": 1
+            },
+            {
+              "tag": "CH2_STATUS",
+              "op": "==",
+              "value": 0
+            }
+          ],
+          "expected": [
+            {
+              "tag": "CHWS_T_SUP",
+              "op": "in_band",
+              "band": [
+                6,
+                8
+              ],
+              "within_sec": 20,
+              "hold_sec": 10
+            }
+          ],
+          "abort_conditions": [],
+          "rollback": [],
+          "changes_state": false
+        },
+        {
+          "id": "S2",
+          "title": "부하 안정 확인",
+          "action": "부하기 LB-01 출력을 200 kW로 유지한다.",
+          "preconditions": [
+            {
+              "tag": "LOAD_KW",
+              "op": ">",
+              "value": 0
+            }
+          ],
+          "expected": [
+            {
+              "tag": "LOAD_KW",
+              "op": ">=",
+              "value": 200,
+              "within_sec": 30,
+              "hold_sec": 10
+            }
+          ],
+          "abort_conditions": [],
+          "rollback": [
+            "부하기 출력을 0 kW로 하강한다."
+          ],
+          "changes_state": true
+        },
+        {
+          "id": "S3",
+          "title": "CH-1 모의 트립",
+          "action": "CH-1 트립 접점을 모의 입력한다.",
+          "preconditions": [
+            {
+              "tag": "CH1_STATUS",
+              "op": "==",
+              "value": 1
+            },
+            {
+              "tag": "CH2_STATUS",
+              "op": "==",
+              "value": 0
+            }
+          ],
+          "trigger": {
+            "tag": "CH1_TRIP",
+            "op": "==",
+            "value": 1
+          },
+          "expected": [
+            {
+              "tag": "CH1_STATUS",
+              "op": "==",
+              "value": 0,
+              "within_sec": 5,
+              "hold_sec": 0
+            }
+          ],
+          "abort_conditions": [
+            {
+              "tag": "CHWS_T_SUP",
+              "op": ">",
+              "value": 14
+            }
+          ],
+          "rollback": [
+            "트립 접점을 복구하고 CH-1을 재기동한다."
+          ],
+          "changes_state": true
+        },
+        {
+          "id": "S4",
+          "title": "대기기 기동 지령 확인",
+          "action": "BMS 자동 전환 로직의 기동 지령 출력을 확인한다.",
+          "preconditions": [
+            {
+              "tag": "CH1_TRIP",
+              "op": "==",
+              "value": 1
+            }
+          ],
+          "expected": [
+            {
+              "tag": "CH2_CMD",
+              "op": "==",
+              "value": 1,
+              "within_sec": 10,
+              "hold_sec": 0
+            }
+          ],
+          "abort_conditions": [
+            {
+              "tag": "CHWS_T_SUP",
+              "op": ">",
+              "value": 14
+            }
+          ],
+          "rollback": [
+            "자동 전환 로직을 비활성하고 수동 운전으로 전환한다."
+          ],
+          "changes_state": false
+        },
+        {
+          "id": "S5",
+          "title": "CH-2 운전 확인",
+          "action": "CH-2 기동 및 운전 상태를 확인한다.",
+          "preconditions": [
+            {
+              "tag": "CH2_CMD",
+              "op": "==",
+              "value": 1
+            }
+          ],
+          "expected": [
+            {
+              "tag": "CH2_STATUS",
+              "op": "==",
+              "value": 1,
+              "within_sec": 30,
+              "hold_sec": 0
+            }
+          ],
+          "abort_conditions": [
+            {
+              "tag": "CHWS_T_SUP",
+              "op": ">",
+              "value": 14
+            }
+          ],
+          "rollback": [
+            "CH-2를 수동 정지한다."
+          ],
+          "changes_state": true
+        },
+        {
+          "id": "S6",
+          "title": "냉수펌프 CHWP-2 연동 기동",
+          "action": "CH-2 운전에 연동한 냉수펌프 기동을 확인한다.",
+          "preconditions": [
+            {
+              "tag": "CH2_STATUS",
+              "op": "==",
+              "value": 1
+            }
+          ],
+          "expected": [
+            {
+              "tag": "CHWP2_STATUS",
+              "op": "==",
+              "value": 1,
+              "within_sec": 20,
+              "hold_sec": 0
+            }
+          ],
+          "abort_conditions": [
+            {
+              "tag": "CHWS_T_SUP",
+              "op": ">",
+              "value": 14
+            }
+          ],
+          "rollback": [
+            "CHWP-2를 수동 정지한다."
+          ],
+          "changes_state": true
+        },
+        {
+          "id": "S7",
+          "title": "냉수 공급온도 회복",
+          "action": "공급온도 트렌드를 관찰한다.",
+          "preconditions": [
+            {
+              "tag": "CHWP2_STATUS",
+              "op": "==",
+              "value": 1
+            }
+          ],
+          "expected": [
+            {
+              "tag": "CHWS_T_SUP",
+              "op": "in_band",
+              "band": [
+                6,
+                8
+              ],
+              "within_sec": 60,
+              "hold_sec": 10
+            }
+          ],
+          "abort_conditions": [
+            {
+              "tag": "CHWS_T_SUP",
+              "op": ">",
+              "value": 14
+            }
+          ],
+          "rollback": [
+            "CH-1을 수동 재기동한다."
+          ],
+          "changes_state": false
+        },
+        {
+          "id": "S8",
+          "title": "정상 상태 복구",
+          "action": "트립 접점을 복구하고 CH-1을 재기동한 뒤 CH-2를 대기로 복귀시킨다.",
+          "preconditions": [
+            {
+              "tag": "CH2_STATUS",
+              "op": "==",
+              "value": 1
+            }
+          ],
+          "trigger": {
+            "tag": "CH1_TRIP",
+            "op": "==",
+            "value": 0
+          },
+          "expected": [
+            {
+              "tag": "CH1_STATUS",
+              "op": "==",
+              "value": 1,
+              "within_sec": 60,
+              "hold_sec": 0
+            },
+            {
+              "tag": "CH2_STATUS",
+              "op": "==",
+              "value": 0,
+              "within_sec": 90,
+              "hold_sec": 0
+            }
+          ],
+          "abort_conditions": [],
+          "rollback": [
+            "수동 운전으로 전환한다."
+          ],
+          "changes_state": true,
+          "trigger_wait_sec": 180
+        }
+      ]
+    }
+  },
+  {
+    "id": "pump",
+    "origin": "independently specified synthetic fixture",
+    "markdown": "# 시험절차서 IST-EVAL-PUMP\n## 순환펌프 기동과 유량 확인\n\n### S1 초기 압력 확인\n- 조치: 펌프 정지 상태와 공급압력을 확인한다.\n- 사전조건: P1_STATUS = 0\n- 기대 결과: SUPPLY_PRESSURE >= 2.5 kPa를 2초 이상 유지. 허용시간 10초.\n- 복구: 해당 없음(상태 변경 없음)\n- 상태 변경: 없음\n\n### S2 펌프 기동\n- 조치: P1 기동 지령을 모의 입력한다.\n- 트리거: P1_CMD = 1\n- 기대 결과: P1_STATUS = 1이 15초 이내 성립\n- 복구: 승인된 절차에 따라 P1을 정지한다.\n- 상태 변경: 있음\n\n### S3 유량 안정\n- 조치: 유량 추이를 확인한다.\n- 기대 결과: FLOW_RATE >= 12.5 L/s를 5초 이상 유지. 허용시간 30초.\n- 복구: 해당 없음(상태 변경 없음)\n- 상태 변경: 없음",
+    "expected": {
+      "plan_id": "IST-EVAL-PUMP",
+      "title": "순환펌프 기동과 유량 확인",
+      "steps": [
+        {
+          "id": "S1",
+          "title": "초기 압력 확인",
+          "action": "펌프 정지 상태와 공급압력을 확인한다.",
+          "preconditions": [
+            {
+              "tag": "P1_STATUS",
+              "op": "==",
+              "value": 0
+            }
+          ],
+          "trigger": null,
+          "expected": [
+            {
+              "tag": "SUPPLY_PRESSURE",
+              "op": ">=",
+              "value": 2.5,
+              "within_sec": 10,
+              "hold_sec": 2
+            }
+          ],
+          "abort_conditions": [],
+          "rollback": [],
+          "changes_state": false
+        },
+        {
+          "id": "S2",
+          "title": "펌프 기동",
+          "action": "P1 기동 지령을 모의 입력한다.",
+          "preconditions": [],
+          "trigger": {
+            "tag": "P1_CMD",
+            "op": "==",
+            "value": 1
+          },
+          "expected": [
+            {
+              "tag": "P1_STATUS",
+              "op": "==",
+              "value": 1,
+              "within_sec": 15,
+              "hold_sec": 0
+            }
+          ],
+          "abort_conditions": [],
+          "rollback": [
+            "승인된 절차에 따라 P1을 정지한다."
+          ],
+          "changes_state": true
+        },
+        {
+          "id": "S3",
+          "title": "유량 안정",
+          "action": "유량 추이를 확인한다.",
+          "preconditions": [],
+          "trigger": null,
+          "expected": [
+            {
+              "tag": "FLOW_RATE",
+              "op": ">=",
+              "value": 12.5,
+              "within_sec": 30,
+              "hold_sec": 5
+            }
+          ],
+          "abort_conditions": [],
+          "rollback": [],
+          "changes_state": false
+        }
+      ]
+    }
+  },
+  {
+    "id": "ahu",
+    "origin": "independently specified synthetic fixture",
+    "markdown": "# 시험절차서 IST-EVAL-AHU\n## 공조기 댐퍼와 급기온도 확인\n\n### S1 댐퍼 위치 확인\n- 조치: 외기 댐퍼 위치를 확인한다.\n- 기대 결과: OA_DAMPER_POS 50 미만. 허용시간 12초.\n- 복구: 해당 없음(상태 변경 없음)\n- 상태 변경: 없음\n\n### S2 급기온도 확인\n- 조치: 급기온도를 관찰한다.\n- 기대 결과: SUPPLY_AIR_T 18~24 °C를 3초 이상 유지. 허용시간 45초.\n- 복구: 해당 없음(상태 변경 없음)\n- 상태 변경: 없음",
+    "expected": {
+      "plan_id": "IST-EVAL-AHU",
+      "title": "공조기 댐퍼와 급기온도 확인",
+      "steps": [
+        {
+          "id": "S1",
+          "title": "댐퍼 위치 확인",
+          "action": "외기 댐퍼 위치를 확인한다.",
+          "preconditions": [],
+          "trigger": null,
+          "expected": [
+            {
+              "tag": "OA_DAMPER_POS",
+              "op": "<",
+              "value": 50,
+              "within_sec": 12,
+              "hold_sec": 0
+            }
+          ],
+          "abort_conditions": [],
+          "rollback": [],
+          "changes_state": false
+        },
+        {
+          "id": "S2",
+          "title": "급기온도 확인",
+          "action": "급기온도를 관찰한다.",
+          "preconditions": [],
+          "trigger": null,
+          "expected": [
+            {
+              "tag": "SUPPLY_AIR_T",
+              "op": "in_band",
+              "band": [
+                18,
+                24
+              ],
+              "within_sec": 45,
+              "hold_sec": 3
+            }
+          ],
+          "abort_conditions": [],
+          "rollback": [],
+          "changes_state": false
+        }
+      ]
+    }
+  },
+  {
+    "id": "valve",
+    "origin": "independently specified synthetic fixture",
+    "markdown": "# 시험절차서 IST-EVAL-VALVE\n## 밸브 위치 피드백 확인\n\n### S1 피드백 활성 확인\n- 조치: 밸브 위치 피드백을 확인한다.\n- 기대 결과: VALVE_FB != 0이 5초 이내 성립\n- 복구: 해당 없음(상태 변경 없음)\n- 상태 변경: 없음\n\n### S2 밸브 개도 확인\n- 조치: 개도 지령과 피드백을 대조한다.\n- 기대 결과: VALVE_FB == 75.5를 2초 유지. 허용시간 8초.\n- 복구: 해당 없음(상태 변경 없음)\n- 상태 변경: 없음",
+    "expected": {
+      "plan_id": "IST-EVAL-VALVE",
+      "title": "밸브 위치 피드백 확인",
+      "steps": [
+        {
+          "id": "S1",
+          "title": "피드백 활성 확인",
+          "action": "밸브 위치 피드백을 확인한다.",
+          "preconditions": [],
+          "trigger": null,
+          "expected": [
+            {
+              "tag": "VALVE_FB",
+              "op": "!=",
+              "value": 0,
+              "within_sec": 5,
+              "hold_sec": 0
+            }
+          ],
+          "abort_conditions": [],
+          "rollback": [],
+          "changes_state": false
+        },
+        {
+          "id": "S2",
+          "title": "밸브 개도 확인",
+          "action": "개도 지령과 피드백을 대조한다.",
+          "preconditions": [],
+          "trigger": null,
+          "expected": [
+            {
+              "tag": "VALVE_FB",
+              "op": "==",
+              "value": 75.5,
+              "within_sec": 8,
+              "hold_sec": 2
+            }
+          ],
+          "abort_conditions": [],
+          "rollback": [],
+          "changes_state": false
+        }
+      ]
+    }
+  },
+  {
+    "id": "pressure",
+    "origin": "independently specified synthetic fixture",
+    "markdown": "# 시험절차서 IST-EVAL-PRESSURE\n## 차압 범위와 상한 확인\n\n### S1 상한 확인\n- 조치: 차압 상한을 확인한다.\n- 기대 결과: PUMP_DIFF_P <= 1.25 kPa. 허용시간 10초.\n- 복구: 해당 없음(상태 변경 없음)\n- 상태 변경: 없음\n\n### S2 차압 안정 확인\n- 조치: 차압의 부호와 안정 구간을 확인한다.\n- 기대 결과: ZONE_DIFF_P -1.5~2.5를 4초 유지. 허용시간 20초.\n- 복구: 해당 없음(상태 변경 없음)\n- 상태 변경: 없음",
+    "expected": {
+      "plan_id": "IST-EVAL-PRESSURE",
+      "title": "차압 범위와 상한 확인",
+      "steps": [
+        {
+          "id": "S1",
+          "title": "상한 확인",
+          "action": "차압 상한을 확인한다.",
+          "preconditions": [],
+          "trigger": null,
+          "expected": [
+            {
+              "tag": "PUMP_DIFF_P",
+              "op": "<=",
+              "value": 1.25,
+              "within_sec": 10,
+              "hold_sec": 0
+            }
+          ],
+          "abort_conditions": [],
+          "rollback": [],
+          "changes_state": false
+        },
+        {
+          "id": "S2",
+          "title": "차압 안정 확인",
+          "action": "차압의 부호와 안정 구간을 확인한다.",
+          "preconditions": [],
+          "trigger": null,
+          "expected": [
+            {
+              "tag": "ZONE_DIFF_P",
+              "op": "in_band",
+              "band": [
+                -1.5,
+                2.5
+              ],
+              "within_sec": 20,
+              "hold_sec": 4
+            }
+          ],
+          "abort_conditions": [],
+          "rollback": [],
+          "changes_state": false
+        }
+      ]
+    }
+  },
+  {
+    "id": "boundaries",
+    "origin": "independently specified synthetic fixture",
+    "markdown": "# 시험절차서 IST-EVAL-BOUNDARIES\n## 비교 연산자와 소수 시간 확인\n\n### S1 누수 신호 확인\n- 조치: 누수 신호의 수신 상태를 확인한다.\n- 기대 결과: LEAK_STATUS 0 이하. 허용시간 2.5초.\n- 복구: 해당 없음(상태 변경 없음)\n- 상태 변경: 없음\n\n### S2 온도 상한 확인\n- 조치: 저온 계측값을 확인한다.\n- 기대 결과: BRINE_TEMP <= -2.5 °C를 1.5초 유지. 허용시간 8.5초.\n- 복구: 해당 없음(상태 변경 없음)\n- 상태 변경: 없음\n\n### S3 부하 초과 조건 확인\n- 조치: 부하 조건을 확인한다.\n- 기대 결과: PUMP_LOAD 25 초과. 허용시간 11초.\n- 복구: 해당 없음(상태 변경 없음)\n- 상태 변경: 없음",
+    "expected": {
+      "plan_id": "IST-EVAL-BOUNDARIES",
+      "title": "비교 연산자와 소수 시간 확인",
+      "steps": [
+        {
+          "id": "S1",
+          "title": "누수 신호 확인",
+          "action": "누수 신호의 수신 상태를 확인한다.",
+          "preconditions": [],
+          "trigger": null,
+          "expected": [
+            {
+              "tag": "LEAK_STATUS",
+              "op": "<=",
+              "value": 0,
+              "within_sec": 2.5,
+              "hold_sec": 0
+            }
+          ],
+          "abort_conditions": [],
+          "rollback": [],
+          "changes_state": false
+        },
+        {
+          "id": "S2",
+          "title": "온도 상한 확인",
+          "action": "저온 계측값을 확인한다.",
+          "preconditions": [],
+          "trigger": null,
+          "expected": [
+            {
+              "tag": "BRINE_TEMP",
+              "op": "<=",
+              "value": -2.5,
+              "within_sec": 8.5,
+              "hold_sec": 1.5
+            }
+          ],
+          "abort_conditions": [],
+          "rollback": [],
+          "changes_state": false
+        },
+        {
+          "id": "S3",
+          "title": "부하 초과 조건 확인",
+          "action": "부하 조건을 확인한다.",
+          "preconditions": [],
+          "trigger": null,
+          "expected": [
+            {
+              "tag": "PUMP_LOAD",
+              "op": ">",
+              "value": 25,
+              "within_sec": 11,
+              "hold_sec": 0
+            }
+          ],
+          "abort_conditions": [],
+          "rollback": [],
+          "changes_state": false
+        }
+      ]
+    }
+  }
+]

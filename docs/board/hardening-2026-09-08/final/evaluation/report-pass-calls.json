@@ -1,0 +1,16 @@
+[
+  {
+    "messages": [
+      {
+        "role": "system",
+        "content": "Select relevant follow-up checks for an engineer from the provided CANDIDATES. Every candidate is already validated against the final test verdict. Return ONLY one JSON object: {\"action_ids\": [\"exact candidate ID\"]}. Select 1 to 3 IDs. Copy IDs exactly. Do not write sentences, causes, settings, or new IDs."
+      },
+      {
+        "role": "user",
+        "content": "{\"overall\": \"PASS\", \"CANDIDATES\": [{\"id\": \"record.archive\", \"step_id\": null, \"reason_code\": \"EXPECTED_MET\", \"text\": \"시험 기록을 승인 절차서와 함께 보관한다.\"}, {\"id\": \"record.signoff\", \"step_id\": null, \"reason_code\": \"EXPECTED_MET\", \"text\": \"담당 엔지니어가 판정 근거를 검토하고 시험 기록의 최종 승인 여부를 확인한다.\"}]}"
+      }
+    ],
+    "response": "{\"action_ids\": [\"record.archive\", \"record.signoff\"]}",
+    "sec": 0.9916159319982398
+  }
+]

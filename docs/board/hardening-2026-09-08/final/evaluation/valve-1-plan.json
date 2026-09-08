@@ -1,0 +1,54 @@
+{
+  "plan_id": "IST-EVAL-VALVE",
+  "title": "밸브 위치 피드백 확인",
+  "equipment": [],
+  "steps": [
+    {
+      "id": "S1",
+      "title": "피드백 활성 확인",
+      "action": "밸브 위치 피드백을 확인한다.",
+      "preconditions": [],
+      "trigger": null,
+      "expected": [
+        {
+          "tag": "VALVE_FB",
+          "op": "!=",
+          "value": 0.0,
+          "band": null,
+          "within_sec": 5.0,
+          "hold_sec": 0.0
+        }
+      ],
+      "abort_conditions": [],
+      "rollback": [],
+      "changes_state": false,
+      "precond_wait_sec": 10.0,
+      "trigger_wait_sec": 120.0,
+      "source_text": "### S1 피드백 활성 확인\n- 조치: 밸브 위치 피드백을 확인한다.\n- 기대 결과: VALVE_FB != 0이 5초 이내 성립\n- 복구: 해당 없음(상태 변경 없음)\n- 상태 변경: 없음"
+    },
+    {
+      "id": "S2",
+      "title": "밸브 개도 확인",
+      "action": "개도 지령과 피드백을 대조한다.",
+      "preconditions": [],
+      "trigger": null,
+      "expected": [
+        {
+          "tag": "VALVE_FB",
+          "op": "==",
+          "value": 75.5,
+          "band": null,
+          "within_sec": 8.0,
+          "hold_sec": 2.0
+        }
+      ],
+      "abort_conditions": [],
+      "rollback": [],
+      "changes_state": false,
+      "precond_wait_sec": 10.0,
+      "trigger_wait_sec": 120.0,
+      "source_text": "### S2 밸브 개도 확인\n- 조치: 개도 지령과 피드백을 대조한다.\n- 기대 결과: VALVE_FB == 75.5를 2초 유지. 허용시간 8초.\n- 복구: 해당 없음(상태 변경 없음)\n- 상태 변경: 없음"
+    }
+  ],
+  "tag_aliases": {}
+}

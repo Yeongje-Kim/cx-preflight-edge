@@ -1,0 +1,11 @@
+{
+  "pids": {
+    "runtime": 57849,
+    "server": 58444
+  },
+  "namespaces": {
+    "runtime": "net:[4026533692]",
+    "server": "net:[4026533692]"
+  },
+  "host_management_namespace": "net:[4026531840]"
+}

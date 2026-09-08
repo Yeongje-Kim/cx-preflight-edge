@@ -1,0 +1,77 @@
+{
+  "plan_id": "IST-EVAL-BOUNDARIES",
+  "title": "비교 연산자와 소수 시간 확인",
+  "equipment": [],
+  "steps": [
+    {
+      "id": "S1",
+      "title": "누수 신호 확인",
+      "action": "누수 신호의 수신 상태를 확인한다.",
+      "preconditions": [],
+      "trigger": null,
+      "expected": [
+        {
+          "tag": "LEAK_STATUS",
+          "op": "<=",
+          "value": 0.0,
+          "band": null,
+          "within_sec": 2.5,
+          "hold_sec": 0.0
+        }
+      ],
+      "abort_conditions": [],
+      "rollback": [],
+      "changes_state": false,
+      "precond_wait_sec": 10.0,
+      "trigger_wait_sec": 120.0,
+      "source_text": "### S1 누수 신호 확인\n- 조치: 누수 신호의 수신 상태를 확인한다.\n- 기대 결과: LEAK_STATUS 0 이하. 허용시간 2.5초.\n- 복구: 해당 없음(상태 변경 없음)\n- 상태 변경: 없음"
+    },
+    {
+      "id": "S2",
+      "title": "온도 상한 확인",
+      "action": "저온 계측값을 확인한다.",
+      "preconditions": [],
+      "trigger": null,
+      "expected": [
+        {
+          "tag": "BRINE_TEMP",
+          "op": "<=",
+          "value": -2.5,
+          "band": null,
+          "within_sec": 8.5,
+          "hold_sec": 1.5
+        }
+      ],
+      "abort_conditions": [],
+      "rollback": [],
+      "changes_state": false,
+      "precond_wait_sec": 10.0,
+      "trigger_wait_sec": 120.0,
+      "source_text": "### S2 온도 상한 확인\n- 조치: 저온 계측값을 확인한다.\n- 기대 결과: BRINE_TEMP <= -2.5 °C를 1.5초 유지. 허용시간 8.5초.\n- 복구: 해당 없음(상태 변경 없음)\n- 상태 변경: 없음"
+    },
+    {
+      "id": "S3",
+      "title": "부하 초과 조건 확인",
+      "action": "부하 조건을 확인한다.",
+      "preconditions": [],
+      "trigger": null,
+      "expected": [
+        {
+          "tag": "PUMP_LOAD",
+          "op": ">",
+          "value": 25.0,
+          "band": null,
+          "within_sec": 11.0,
+          "hold_sec": 0.0
+        }
+      ],
+      "abort_conditions": [],
+      "rollback": [],
+      "changes_state": false,
+      "precond_wait_sec": 10.0,
+      "trigger_wait_sec": 120.0,
+      "source_text": "### S3 부하 초과 조건 확인\n- 조치: 부하 조건을 확인한다.\n- 기대 결과: PUMP_LOAD 25 초과. 허용시간 11초.\n- 복구: 해당 없음(상태 변경 없음)\n- 상태 변경: 없음"
+    }
+  ],
+  "tag_aliases": {}
+}
