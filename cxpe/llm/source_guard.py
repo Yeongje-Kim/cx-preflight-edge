@@ -110,27 +110,30 @@ def source_reference(text: str) -> dict:
 
 
 def validate_source(step: Step, text: str) -> None:
+    # Report related mismatches together so one retry can repair all of them.
+    # A condition-count error must not hide wrong timing in the common entries.
+    issues = []
     narrative = source_narrative(text)
     for field, original in narrative.items():
         if getattr(step, field) != original:
-            raise ValueError(f"{step.id}.{field}: 원문 문구와 다름")
+            issues.append(f"{step.id}.{field}: 원문 문구와 다름")
     if step.source_text and step.source_text.strip() != text.strip():
-        raise ValueError(f"{step.id}.source_text: 원문 보관본과 다름")
+        issues.append(f"{step.id}.source_text: 원문 보관본과 다름")
     source = source_reference(text)
     for field, reference in source.items():
-        actual = ([step.trigger] if step.trigger else []) if field=='trigger' else getattr(step, field)
-        if len(actual)!=len(reference):
-            raise ValueError(f'{step.id}.{field}: 원문 조건 {len(reference)}개, 추출 {len(actual)}개')
+        actual = ([step.trigger] if step.trigger else []) if field == 'trigger' else getattr(step, field)
+        if len(actual) != len(reference):
+            issues.append(f'{step.id}.{field}: 원문 조건 {len(reference)}개, 추출 {len(actual)}개')
         for i, (a, r) in enumerate(zip(actual, reference)):
             data = a.model_dump(mode='json')
             for key, value in r.items():
                 if data[key] != value:
-                    raise ValueError(f'{step.id}.{field}[{i}].{key}: 원문 값 {value!r}, 추출 값 {data[key]!r}')
+                    issues.append(f'{step.id}.{field}[{i}].{key}: 원문 값 {value!r}, 추출 값 {data[key]!r}')
     state = line(text, '상태 변경')
-    if state not in ('', '있음', '없음'):
-        raise ValueError('원문 대조 불가: 상태 변경 표현')
-    if step.changes_state != (state=='있음'):
-        raise ValueError(f'{step.id}.changes_state: 원문 값 {state=="있음"}')
+    if step.changes_state != (state == '있음'):
+        issues.append(f'{step.id}.changes_state: 원문 값 {state == "있음"}')
+    if issues:
+        raise ValueError("; ".join(issues))
 
 
 def validate_plan_source(plan: TestPlan, md: str) -> None:

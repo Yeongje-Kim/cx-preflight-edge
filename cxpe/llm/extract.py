@@ -162,8 +162,8 @@ def extract_step(client: LlmClient, step_id: str, title: str, text: str, max_tok
         messages = messages + [
             {"role": "assistant", "content": "(invalid)\n" + raw[:4000]},
             {"role": "user", "content": "Your previous output did not fit the schema. Error:\n"
-                                        + (last_err or "")[:400]
-                                        + "\nFix exactly these fields and output ONLY the JSON object."},
+                                        + (last_err or "")[:1600]
+                                        + "\nCorrect ALL listed mismatches together, including condition count, within_sec and hold_sec. Output ONLY the JSON object."},
         ]
     stats["error"] = last_err
     stats["sec"] = time.perf_counter() - t0

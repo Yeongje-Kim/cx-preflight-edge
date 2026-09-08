@@ -29,6 +29,8 @@ EXTRACT_SYSTEM = (
     "(e.g. CH1_STATUS, CHWS_T_SUP). trigger is null when the text has no 트리거. rollback is a list of short "
     "Korean strings from 복구. changes_state is true only when the text says 상태 변경: 있음. "
     "Korean timing: 허용시간 30초 means within_sec=30; 10초 이상 유지 means hold_sec=10. "
+    "Both N초 유지 and N초 이상 유지 mean hold_sec=N, even when a separate sentence gives 허용시간. "
+    "One condition may have BOTH a deadline and a hold duration; do not create a second condition for timing. "
     "Do not swap them. 이상 means >= (not >); 이하 means <=; 초과 means >; 미만 means <. "
     "Example: LOAD_KW 200 kW 이상을 10초 이상 유지. 허용시간 30초 => "
     "tag=LOAD_KW, op=>=, value=200, within_sec=30, hold_sec=10. "

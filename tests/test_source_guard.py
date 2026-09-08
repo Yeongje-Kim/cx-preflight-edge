@@ -135,3 +135,19 @@ def test_scientific_and_leading_decimal_values_are_preserved():
     from cxpe.llm.source_guard import conditions
     assert conditions("PUMP_PRESSURE >= 1e3")[0]["value"] == 1000
     assert conditions("PUMP_PRESSURE >= .5")[0]["value"] == .5
+
+
+def test_retry_reports_all_timing_and_count_mismatches_together():
+    source="### S1 밸브 확인\n- 조치: 피드백을 확인한다.\n- 기대 결과: VALVE_FB == 75.5를 2초 유지. 허용시간 8초.\n- 상태 변경: 없음"
+    from cxpe.schemas import Step
+    expected=Step(id="S1",title="밸브 확인",action="피드백을 확인한다.",expected=[{"tag":"VALVE_FB","op":"==","value":75.5,"within_sec":8,"hold_sec":2}])
+    bad=expected.model_dump(mode="json")
+    bad["expected"][0].update(within_sec=2,hold_sec=0)
+    bad["expected"].append(dict(bad["expected"][0]))
+    backend=FakeBackend(responses=[json.dumps(bad),expected.model_dump_json()])
+    step,stats=extract_step(backend,"S1","밸브 확인",source)
+    assert step is not None and stats["attempts"]==2
+    feedback=backend.calls[1][-1]["content"]
+    assert "원문 조건 1개, 추출 2개" in feedback
+    assert "within_sec: 원문 값 8.0" in feedback
+    assert "hold_sec: 원문 값 2.0" in feedback
