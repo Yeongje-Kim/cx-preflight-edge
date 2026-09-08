@@ -1,0 +1,433 @@
+{
+  "started_utc": "2026-09-07T23:48:12.590994+00:00",
+  "trials": [
+    {
+      "case": "pass",
+      "expected": "PASS",
+      "session": "cx-20260907-164820-5617",
+      "backend": "geniex-18181",
+      "extraction": {
+        "backend": "geniex-18181",
+        "steps": [
+          {
+            "step_id": "S1",
+            "attempts": 1,
+            "ok": true,
+            "error": null,
+            "sec": 8.548059331995319,
+            "issues": [],
+            "source_verified": true
+          },
+          {
+            "step_id": "S2",
+            "attempts": 2,
+            "ok": true,
+            "error": null,
+            "sec": 17.269142611999996,
+            "issues": [
+              "ValueError: S2.expected[0].op: 원문 값 '>=', 추출 값 '=='"
+            ],
+            "source_verified": true
+          },
+          {
+            "step_id": "S3",
+            "attempts": 1,
+            "ok": true,
+            "error": null,
+            "sec": 11.210825936999754,
+            "issues": [],
+            "source_verified": true
+          },
+          {
+            "step_id": "S4",
+            "attempts": 1,
+            "ok": true,
+            "error": null,
+            "sec": 9.701530758000445,
+            "issues": [],
+            "source_verified": true
+          },
+          {
+            "step_id": "S5",
+            "attempts": 1,
+            "ok": true,
+            "error": null,
+            "sec": 8.87992056600342,
+            "issues": [],
+            "source_verified": true
+          },
+          {
+            "step_id": "S6",
+            "attempts": 1,
+            "ok": true,
+            "error": null,
+            "sec": 9.388894848001655,
+            "issues": [],
+            "source_verified": true
+          },
+          {
+            "step_id": "S7",
+            "attempts": 1,
+            "ok": true,
+            "error": null,
+            "sec": 9.161672722999356,
+            "issues": [],
+            "source_verified": true
+          },
+          {
+            "step_id": "S8",
+            "attempts": 1,
+            "ok": true,
+            "error": null,
+            "sec": 11.453623937995872,
+            "issues": [],
+            "source_verified": true
+          }
+        ],
+        "fallback_ids": [],
+        "source_check": "tagged-procedure-v1",
+        "n_source_verified": 8,
+        "n_ok": 8,
+        "n_total": 8,
+        "sec_total": 85.61367071399582
+      },
+      "all_steps_from_ai": true,
+      "overall": "PASS",
+      "timings": {
+        "extract_sec": 85.61536625699955,
+        "run_wall_sec": 0.2334078940039035,
+        "latency_ms_max": 0.30459499976132065,
+        "report_sec": 6.051739870003075,
+        "report_llm_sec": 6.050451276998501
+      },
+      "report_source": "template(llm-guard)",
+      "report_review": {
+        "summary_source": "engine-template",
+        "actions_guard_passed": true,
+        "actions_ko": [
+          "시험 기록을 승인 절차서와 함께 보관한다."
+        ]
+      },
+      "blocked": {
+        "rerun": 409,
+        "reapprove": 409,
+        "force_reapprove": 409
+      },
+      "history_unchanged_after_rejected_requests": true,
+      "sse": {
+        "run_start": 1,
+        "verdict": 8,
+        "report": 1,
+        "done": 1
+      },
+      "regenerated_report_kept_facts": true,
+      "regenerated_report_source": "template(llm-guard)",
+      "success": true
+    },
+    {
+      "case": "fail_start",
+      "expected": "FAIL",
+      "session": "cx-20260907-165005-b971",
+      "backend": "geniex-18181",
+      "extraction": {
+        "backend": "geniex-18181",
+        "steps": [
+          {
+            "step_id": "S1",
+            "attempts": 1,
+            "ok": true,
+            "error": null,
+            "sec": 8.487228023004718,
+            "issues": [],
+            "source_verified": true
+          },
+          {
+            "step_id": "S2",
+            "attempts": 2,
+            "ok": true,
+            "error": null,
+            "sec": 17.113899111995124,
+            "issues": [
+              "ValueError: S2.expected[0].op: 원문 값 '>=', 추출 값 '=='"
+            ],
+            "source_verified": true
+          },
+          {
+            "step_id": "S3",
+            "attempts": 1,
+            "ok": true,
+            "error": null,
+            "sec": 11.076950089001912,
+            "issues": [],
+            "source_verified": true
+          },
+          {
+            "step_id": "S4",
+            "attempts": 1,
+            "ok": true,
+            "error": null,
+            "sec": 9.514386934009963,
+            "issues": [],
+            "source_verified": true
+          },
+          {
+            "step_id": "S5",
+            "attempts": 1,
+            "ok": true,
+            "error": null,
+            "sec": 8.543390545004513,
+            "issues": [],
+            "source_verified": true
+          },
+          {
+            "step_id": "S6",
+            "attempts": 1,
+            "ok": true,
+            "error": null,
+            "sec": 9.51102467700548,
+            "issues": [],
+            "source_verified": true
+          },
+          {
+            "step_id": "S7",
+            "attempts": 1,
+            "ok": true,
+            "error": null,
+            "sec": 9.121645560997422,
+            "issues": [],
+            "source_verified": true
+          },
+          {
+            "step_id": "S8",
+            "attempts": 1,
+            "ok": true,
+            "error": null,
+            "sec": 11.356085004998022,
+            "issues": [],
+            "source_verified": true
+          }
+        ],
+        "fallback_ids": [],
+        "source_check": "tagged-procedure-v1",
+        "n_source_verified": 8,
+        "n_ok": 8,
+        "n_total": 8,
+        "sec_total": 84.72460994601715
+      },
+      "all_steps_from_ai": true,
+      "overall": "FAIL",
+      "timings": {
+        "extract_sec": 84.72613979100424,
+        "run_wall_sec": 0.13763707400357816,
+        "latency_ms_max": 0.218289002077654,
+        "report_sec": 6.139512189998641,
+        "report_llm_sec": 6.13768853500369
+      },
+      "report_source": "template(llm-guard)",
+      "report_review": {
+        "summary_source": "engine-template",
+        "actions_guard_passed": true,
+        "actions_ko": [
+          "실패 단계의 복구 절차를 수행하고 원인을 확인한 뒤 재시험을 계획한다.",
+          "대기 냉동기의 기동 시퀀스와 인터록 설정을 점검한다."
+        ]
+      },
+      "blocked": {
+        "rerun": 409,
+        "reapprove": 409,
+        "force_reapprove": 409
+      },
+      "history_unchanged_after_rejected_requests": true,
+      "sse": {
+        "run_start": 1,
+        "verdict": 8,
+        "report": 1,
+        "done": 1
+      },
+      "regenerated_report_kept_facts": true,
+      "regenerated_report_source": "template(llm-guard)",
+      "success": true
+    },
+    {
+      "case": "fail_dropout",
+      "expected": "HOLD",
+      "session": "cx-20260907-165148-98b2",
+      "backend": "geniex-18181",
+      "extraction": {
+        "backend": "geniex-18181",
+        "steps": [
+          {
+            "step_id": "S1",
+            "attempts": 1,
+            "ok": true,
+            "error": null,
+            "sec": 8.40699043800123,
+            "issues": [],
+            "source_verified": true
+          },
+          {
+            "step_id": "S2",
+            "attempts": 2,
+            "ok": true,
+            "error": null,
+            "sec": 17.017830110999057,
+            "issues": [
+              "ValueError: S2.expected[0].op: 원문 값 '>=', 추출 값 '=='"
+            ],
+            "source_verified": true
+          },
+          {
+            "step_id": "S3",
+            "attempts": 1,
+            "ok": true,
+            "error": null,
+            "sec": 11.02443759299058,
+            "issues": [],
+            "source_verified": true
+          },
+          {
+            "step_id": "S4",
+            "attempts": 1,
+            "ok": true,
+            "error": null,
+            "sec": 9.4795047660009,
+            "issues": [],
+            "source_verified": true
+          },
+          {
+            "step_id": "S5",
+            "attempts": 1,
+            "ok": true,
+            "error": null,
+            "sec": 8.697974210008397,
+            "issues": [],
+            "source_verified": true
+          },
+          {
+            "step_id": "S6",
+            "attempts": 1,
+            "ok": true,
+            "error": null,
+            "sec": 9.387637179010198,
+            "issues": [],
+            "source_verified": true
+          },
+          {
+            "step_id": "S7",
+            "attempts": 1,
+            "ok": true,
+            "error": null,
+            "sec": 9.184101175997057,
+            "issues": [],
+            "source_verified": true
+          },
+          {
+            "step_id": "S8",
+            "attempts": 1,
+            "ok": true,
+            "error": null,
+            "sec": 11.22067754001182,
+            "issues": [],
+            "source_verified": true
+          }
+        ],
+        "fallback_ids": [],
+        "source_check": "tagged-procedure-v1",
+        "n_source_verified": 8,
+        "n_ok": 8,
+        "n_total": 8,
+        "sec_total": 84.41915301301924
+      },
+      "all_steps_from_ai": true,
+      "overall": "HOLD",
+      "timings": {
+        "extract_sec": 84.42062639100186,
+        "run_wall_sec": 0.08274262300983537,
+        "latency_ms_max": 0.10953399760182947,
+        "report_sec": 7.068683744990267,
+        "report_llm_sec": 7.067053334001685
+      },
+      "report_source": "template(llm-guard)",
+      "report_review": {
+        "summary_source": "engine-template",
+        "actions_guard_passed": true,
+        "actions_ko": [
+          "보류 단계는 설비 불합격이 아니다. 계측 경로를 확인한 뒤 새 세션에서 재시험한다.",
+          "계측점 통신 상태와 BMS 트렌드 설정을 점검한다."
+        ]
+      },
+      "blocked": {
+        "rerun": 409,
+        "reapprove": 409,
+        "force_reapprove": 409
+      },
+      "history_unchanged_after_rejected_requests": true,
+      "sse": {
+        "run_start": 1,
+        "verdict": 8,
+        "report": 1,
+        "done": 1
+      },
+      "regenerated_report_kept_facts": true,
+      "regenerated_report_source": "template(llm-guard)",
+      "success": true
+    }
+  ],
+  "success": true,
+  "code_commit": "d8291a6b978bf3779d60676a8066236f79e5b785",
+  "verified_file_count": 152,
+  "environment": {
+    "machine": "aarch64",
+    "python": "3.12.3",
+    "platform": "Linux-6.8.12-4-qc2509-aarch64-with-glibc2.39",
+    "cpu_count": 8
+  },
+  "npu_runtime": {
+    "pid": 11205,
+    "libraries": [
+      "libQnnHtp.so",
+      "libQnnHtpNetRunExtensions.so",
+      "libQnnHtpV73Stub.so",
+      "libQnnSystem.so"
+    ],
+    "devices": [
+      "/dev/fastrpc-cdsp1-secure"
+    ]
+  },
+  "llm": {
+    "backend": "geniex-18181",
+    "alive": true
+  },
+  "new_trial_isolation": true,
+  "finished_utc": "2026-09-07T23:54:43.564215+00:00",
+  "server_restart": {
+    "checks": [
+      {
+        "case": "pass",
+        "session": "cx-20260907-164820-5617",
+        "stored_result": "PASS",
+        "rerun_http": 409,
+        "force_reapproval_http": 409,
+        "history_unchanged": true
+      },
+      {
+        "case": "fail_start",
+        "session": "cx-20260907-165005-b971",
+        "stored_result": "FAIL",
+        "rerun_http": 409,
+        "force_reapproval_http": 409,
+        "history_unchanged": true
+      },
+      {
+        "case": "fail_dropout",
+        "session": "cx-20260907-165148-98b2",
+        "stored_result": "HOLD",
+        "rerun_http": 409,
+        "force_reapproval_http": 409,
+        "history_unchanged": true
+      }
+    ],
+    "report_regeneration_kept_facts": true,
+    "report_source": "template(llm-guard)"
+  }
+}

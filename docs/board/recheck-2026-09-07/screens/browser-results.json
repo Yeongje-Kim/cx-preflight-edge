@@ -1,0 +1,26 @@
+{
+  "rows": [
+    {
+      "case": "pass",
+      "session": "cx-20260907-162738-97d2",
+      "overall": "PASS",
+      "historyReadOnly": true,
+      "reportSource": "문안 출처 geniex-18181"
+    },
+    {
+      "case": "fail_start",
+      "session": "cx-20260907-162928-88f6",
+      "overall": "FAIL",
+      "historyReadOnly": true,
+      "reportSource": "문안 출처 geniex-18181"
+    },
+    {
+      "case": "fail_dropout",
+      "session": "cx-20260907-163124-9b96",
+      "overall": "HOLD",
+      "historyReadOnly": true,
+      "reportSource": "문안 출처 geniex-18181"
+    }
+  ],
+  "errors": []
+}

@@ -260,8 +260,8 @@ function handleEvent(ev) {
     case "run_done":
       S.overall = ev.summary.overall; updateChart(); renderTimeline(); renderLiveExpect(); setModeBadge();
       setStats(ev.summary, ev.timings.run_wall_sec);
-      $("run-status").textContent += `  완료  외부 전송 ${ev.offline.tx_delta_bytes == null ? "미측정" : ev.offline.tx_delta_bytes + " B"}`;
-      $("report").textContent = "보고서 생성 중 (온디바이스 LLM 종합 의견)";
+      $("run-status").textContent += `  완료  인터페이스 송신 증가 ${ev.offline.tx_delta_bytes == null ? "미측정" : ev.offline.tx_delta_bytes + " B"}`;
+      $("report").textContent = "시험 기록 생성 중 (판정 요약과 조치 검토 문안)";
       break;
     case "report":
       loadReport(ev).catch(e => { if (S.sid === ev.session) { $("ui-error").textContent = e.message; $("ui-error").hidden = false; } });
@@ -610,7 +610,7 @@ async function loadExisting(sid) {
     if (bad) S.mimicFreeze = { ...S.frozen[bad.step_id], step: bad.step_id };
     updateChart(); renderTimeline(); renderMimic(S.mimicFreeze ? S.mimicFreeze.vals : S.lastVals, S.mimicFreeze || { t: S.now }); renderLiveExpect(); setElapsed();
     setStats(s, null);
-    $("run-status").textContent = `${s.telemetry || ""}  저장본  외부 전송 ${d.meta.offline && d.meta.offline.tx_delta_bytes != null ? d.meta.offline.tx_delta_bytes + " B" : "미측정"}`;
+    $("run-status").textContent = `${s.telemetry || ""}  저장본  인터페이스 송신 증가 ${d.meta.offline && d.meta.offline.tx_delta_bytes != null ? d.meta.offline.tx_delta_bytes + " B" : "미측정"}`;
     if (d.has_report) { $("report").textContent = await (await fetch(`${API}/sessions/${sid}/report`)).text(); $("report-meta").textContent = `문안 출처 ${(d.remarks || {}).source || "-"}`; $("btn-report").disabled = false; }
     setMode("run");
   }

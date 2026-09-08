@@ -1,0 +1,175 @@
+{
+  "plan_id": "IST-COOL-N1-01",
+  "title": "냉동기 N+1 자동 전환 시험 (냉수 계통)",
+  "overall": "FAIL",
+  "n_pass": 4,
+  "n_fail": 1,
+  "n_abort": 0,
+  "n_hold": 0,
+  "n_skipped": 3,
+  "steps": [
+    {
+      "id": "S1",
+      "title": "초기 상태 확인",
+      "state": "PASS",
+      "reason_codes": [
+        "EXPECTED_MET"
+      ],
+      "reason_ko": "기대 결과 충족: CHWS_T_SUP in [6, 8] (10.0초 소요, 10초 유지)",
+      "t_start": 0.0,
+      "t_end": 10.0,
+      "evidence": {
+        "tag": "CHWS_T_SUP",
+        "t": 10.0,
+        "value": 6.901,
+        "threshold": "CHWS_T_SUP in [6, 8]",
+        "deadline": 20.0,
+        "elapsed_sec": 10.0,
+        "extra": {
+          "within_sec": 20.0,
+          "hold_sec": 10.0
+        }
+      }
+    },
+    {
+      "id": "S2",
+      "title": "부하 안정 확인",
+      "state": "PASS",
+      "reason_codes": [
+        "EXPECTED_MET"
+      ],
+      "reason_ko": "기대 결과 충족: LOAD_KW >= 200 (10.0초 소요, 10초 유지)",
+      "t_start": 11.0,
+      "t_end": 21.0,
+      "evidence": {
+        "tag": "LOAD_KW",
+        "t": 21.0,
+        "value": 219.4,
+        "threshold": "LOAD_KW >= 200",
+        "deadline": 41.0,
+        "elapsed_sec": 10.0,
+        "extra": {
+          "within_sec": 30.0,
+          "hold_sec": 10.0
+        }
+      }
+    },
+    {
+      "id": "S3",
+      "title": "CH-1 모의 트립",
+      "state": "PASS",
+      "reason_codes": [
+        "EXPECTED_MET"
+      ],
+      "reason_ko": "기대 결과 충족: CH1_STATUS == 0 (1.0초 소요)",
+      "t_start": 25.0,
+      "t_end": 26.0,
+      "evidence": {
+        "tag": "CH1_STATUS",
+        "t": 26.0,
+        "value": 0.0,
+        "threshold": "CH1_STATUS == 0",
+        "deadline": 30.0,
+        "elapsed_sec": 1.0,
+        "extra": {
+          "within_sec": 5.0,
+          "hold_sec": 0.0
+        }
+      }
+    },
+    {
+      "id": "S4",
+      "title": "대기기 기동 지령 확인",
+      "state": "PASS",
+      "reason_codes": [
+        "EXPECTED_MET"
+      ],
+      "reason_ko": "기대 결과 충족: CH2_CMD == 1 (0.0초 소요)",
+      "t_start": 27.0,
+      "t_end": 27.0,
+      "evidence": {
+        "tag": "CH2_CMD",
+        "t": 27.0,
+        "value": 1.0,
+        "threshold": "CH2_CMD == 1",
+        "deadline": 37.0,
+        "elapsed_sec": 0.0,
+        "extra": {
+          "within_sec": 10.0,
+          "hold_sec": 0.0
+        }
+      }
+    },
+    {
+      "id": "S5",
+      "title": "CH-2 운전 확인",
+      "state": "FAIL",
+      "reason_codes": [
+        "STANDBY_START_TIMEOUT"
+      ],
+      "reason_ko": "대기기 기동 지연: CH2_STATUS == 1 조건이 허용시간 30초 내 성립하지 않음 (마감 t=58.0초, 실제 성립 72.0초, 마지막 값 0.00)",
+      "t_start": 28.0,
+      "t_end": 59.0,
+      "evidence": {
+        "tag": "CH2_STATUS",
+        "t": 59.0,
+        "value": 0.0,
+        "threshold": "CH2_STATUS == 1",
+        "deadline": 58.0,
+        "elapsed_sec": 31.0,
+        "extra": {
+          "within_sec": 30.0,
+          "hold_sec": 0.0,
+          "met_t": 72.0
+        }
+      }
+    },
+    {
+      "id": "S6",
+      "title": "냉수펌프 CHWP-2 연동 기동",
+      "state": "SKIPPED",
+      "reason_codes": [
+        "SKIPPED_AFTER_FAIL"
+      ],
+      "reason_ko": "선행 단계 실패로 미실행",
+      "t_start": null,
+      "t_end": 59.0,
+      "evidence": {}
+    },
+    {
+      "id": "S7",
+      "title": "냉수 공급온도 회복",
+      "state": "SKIPPED",
+      "reason_codes": [
+        "SKIPPED_AFTER_FAIL"
+      ],
+      "reason_ko": "선행 단계 실패로 미실행",
+      "t_start": null,
+      "t_end": 59.0,
+      "evidence": {}
+    },
+    {
+      "id": "S8",
+      "title": "정상 상태 복구",
+      "state": "SKIPPED",
+      "reason_codes": [
+        "SKIPPED_AFTER_FAIL"
+      ],
+      "reason_ko": "선행 단계 실패로 미실행",
+      "t_start": null,
+      "t_end": 59.0,
+      "evidence": {}
+    }
+  ],
+  "exceeded": [
+    {
+      "step_id": "S5",
+      "t0": 58.0,
+      "t1": 72.0
+    }
+  ],
+  "meta": {
+    "case": "fail_start",
+    "telemetry": "fail_start"
+  }
+}
