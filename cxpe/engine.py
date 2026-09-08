@@ -19,6 +19,7 @@ HOLD(보류)는 "판정하지 않음"이다. 판정에 필요한 값이 없을 �
 from __future__ import annotations
 
 import time
+import math
 from dataclasses import dataclass, field
 from typing import Optional
 
@@ -81,7 +82,8 @@ class RunEngine:
     # ------------------------------------------------------------ helpers
     def _val(self, sample: Sample, tag: str) -> Optional[float]:
         real = self.plan.tag_aliases.get(tag, tag)
-        return sample.get(real)
+        value = sample.get(real)
+        return value if value is not None and math.isfinite(value) else None
 
     def _eval(self, sample: Sample, cond: Cond) -> Optional[bool]:
         return cond.evaluate(self._val(sample, cond.tag))
@@ -126,7 +128,12 @@ class RunEngine:
     # ------------------------------------------------------------ main
     def feed(self, sample: Sample) -> list[Event]:
         t0_perf = time.perf_counter()
-        t = float(sample["t_sec"])  # type: ignore[arg-type]
+        try:
+            t = float(sample["t_sec"])
+        except (KeyError, TypeError, ValueError) as error:
+            raise ValueError("t_sec must be a finite, increasing timestamp") from error
+        if not math.isfinite(t) or self.last_t is not None and t <= self.last_t:
+            raise ValueError("t_sec must be a finite, increasing timestamp")
         self.last_t = t
         events: list[Event] = []
         self._track_exceeded(sample, t)

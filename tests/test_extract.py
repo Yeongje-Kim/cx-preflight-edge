@@ -110,10 +110,7 @@ def test_report_guard_and_render(golden):
                                                       "reason_codes": ["STANDBY_START_TIMEOUT"]}, ensure_ascii=False)])
     r = draft_report_ko(facts, hallucinated)
     assert r["source"].startswith("template")
-    good = FakeBackend(responses=[json.dumps({"summary_ko": "S5 단계에서 대기기 기동이 허용시간 30초를 넘겨 불합격이다.",
-                                              "actions_ko": ["인터록을 점검한다."],
-                                              "reason_codes": ["STANDBY_START_TIMEOUT", "EXPECTED_MET", "BOGUS"]},
-                                             ensure_ascii=False)])
+    good = FakeBackend(responses=[json.dumps({"action_ids": ["S5.interlock_record"]})])
     r = draft_report_ko(facts, good)
     assert r["source"] == "fake" and r["reason_codes"][0] == "STANDBY_START_TIMEOUT" and "BOGUS" not in r["reason_codes"]
     md = render_report_md(facts, r, {"id": "s1", "case": "fail_start"})

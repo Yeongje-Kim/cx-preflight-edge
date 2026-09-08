@@ -173,9 +173,11 @@ def list_sessions() -> dict:
 def create_session(body: dict = Body(default={})) -> dict:
     st = _st()
     case = body.get("case", "pass")
-    if case not in DEMO_CASES:
+    if not isinstance(case, str) or case not in DEMO_CASES:
         raise HTTPException(400, f"unknown case {case}")
     mode = body.get("mode", "golden")
+    if not isinstance(mode, str) or mode not in {"golden", "llm"}:
+        raise HTTPException(400, "mode must be golden or llm")
     plan_md = (DATA / "plan_n1_cooling.md").read_text(encoding="utf-8")
     tags = _tags()
     base_plan = _load_plan_file(DEMO_CASES[case]["plan"])
@@ -279,8 +281,8 @@ def delete_session(sid: str) -> dict:
     st = _st()
     with st.session_lock(sid):
         _session_or_404(sid)
-        if st.store.read_meta(sid).summary.get("status") in ("running", "reporting"):
-            raise HTTPException(409, "실행 또는 보고서 생성 중인 세션은 삭제할 수 없습니다")
+        if st.store.read_meta(sid).summary.get("status") in ("extracting", "running", "reporting"):
+            raise HTTPException(409, "구조화·실행·보고서 생성 중인 세션은 삭제할 수 없습니다")
         st.store.delete(sid)
         with st.lock:
             st.buses.pop(sid, None)
@@ -314,7 +316,9 @@ def _approve(sid: str, body: dict, st: State) -> dict:
     _require_unrun(st.store, sid)
     if not st.store.has(sid, "plan.json"):
         raise HTTPException(409, "절차서 구조화가 끝난 뒤 승인하세요")
-    plan_data = body.get("plan") or st.store.load_json(sid, "plan.json")
+    if not isinstance(body.get("force", False), bool):
+        raise HTTPException(400, "force must be a boolean")
+    plan_data = body.get("plan", st.store.load_json(sid, "plan.json"))
     try:
         plan = TestPlan.model_validate(plan_data)
     except Exception as e:
@@ -356,11 +360,20 @@ def _start_run(sid: str, body: dict, st: State) -> dict:
             validate_plan_source(TestPlan.model_validate(s.load_json(sid, "rules.approved.json")), s.load_text(sid, "plan.md"))
         except ValueError as e:
             raise HTTPException(409, f"승인 규칙 원문 대조 실패: {e}. 재추출·재승인이 필요합니다") from e
-    tel = body.get("telemetry") or meta.summary.get("telemetry") or "pass"
-    if tel not in SYNTH_CASES:
+    tel = body.get("telemetry", meta.summary.get("telemetry") or "pass")
+    if not isinstance(tel, str) or tel not in SYNTH_CASES:
         raise HTTPException(400, f"unknown telemetry case {tel}")
-    speed = float(body.get("speed", 5.0))
-    seed = int(body.get("seed", 0))
+    try:
+        speed = float(body.get("speed", 5.0))
+        seed_value = body.get("seed", 0)
+        if isinstance(seed_value, bool) or isinstance(seed_value, float) and not seed_value.is_integer():
+            raise ValueError("seed must be an integer")
+        seed = int(seed_value)
+        import math
+        if isinstance(body.get("speed"), bool) or not math.isfinite(speed) or speed < 0:
+            raise ValueError("speed must be finite and nonnegative")
+    except (ValueError, TypeError, OverflowError) as error:
+        raise HTTPException(400, "speed는 0 이상의 유한한 수, seed는 정수여야 합니다") from error
     plan = TestPlan.model_validate(s.load_json(sid, "rules.approved.json"))
     rows, labels, _ = make_case(tel, seed=seed)
     # 시험 한 번당 세션 하나. 실행 당시 승인 규칙은 별도 보관한다.

@@ -17,9 +17,8 @@ def client(tmp_path, monkeypatch):
     monkeypatch.setenv("CXPE_SKIP_CONNECT_PROBE", "1")
     st = server.State()
     st.store = SessionStore(tmp_path / "sessions")
-    st.llm = FakeBackend(responder=lambda m: json.dumps({
-        "summary_ko": "규칙 엔진 판정 결과를 요약한다.", "actions_ko": ["기록을 보관한다."], "reason_codes": ["EXPECTED_MET"]},
-        ensure_ascii=False))
+    st.llm = FakeBackend(responder=lambda messages: json.dumps({"action_ids": [
+        json.loads(messages[1]["content"])["CANDIDATES"][0]["id"]]}))
     st.llm_checked = time.time() + 10**6  # autodetect 비활성
     server.app.state.cx = st
     return TestClient(server.app)
@@ -275,3 +274,43 @@ def test_stream_delivers_events_published_just_after_subscription(client, monkey
 
     monkeypatch.setattr(bus, "subscribe", subscribe_at_completion)
     assert [e["type"] for e in read_events(client, sid)][-3:] == ["verdict", "report", "done"]
+
+
+@pytest.mark.parametrize("body", [{"speed":"bad"},{"speed":None},{"speed":-1},{"speed":"NaN"},
+                                    {"speed":"Infinity"},{"seed":1.5},{"seed":True},{"telemetry":[]}])
+def test_invalid_run_options_do_not_consume_session(client,body):
+    sid=client.post("/api/v1/sessions",json={"case":"pass"}).json()["id"]
+    assert client.post(f"/api/v1/sessions/{sid}/approve",json={}).status_code==200
+    assert client.post(f"/api/v1/sessions/{sid}/run",json=body).status_code==400
+    assert not server._st().store.has(sid,"rules.executed.json")
+    assert client.get(f"/api/v1/sessions/{sid}").json()["meta"]["summary"]["status"]=="approved"
+
+
+@pytest.mark.parametrize("body", [{"mode":"unknown"},{"mode":[]},{"case":[]},{"case":None}])
+def test_invalid_session_inputs_return_client_error(client,body):
+    before=len(client.get("/api/v1/sessions").json()["sessions"])
+    assert client.post("/api/v1/sessions",json=body).status_code==400
+    assert len(client.get("/api/v1/sessions").json()["sessions"])==before
+
+
+def test_string_force_is_not_a_boolean_override(client):
+    sid=client.post("/api/v1/sessions",json={"case":"preflight_warn"}).json()["id"]
+    assert client.post(f"/api/v1/sessions/{sid}/approve",json={"force":"false"}).status_code==400
+    assert not server._st().store.has(sid,"rules.approved.json")
+
+
+def test_active_extraction_cannot_be_deleted(client):
+    sid=client.post("/api/v1/sessions",json={"case":"pass"}).json()["id"]
+    server._st().store.update_meta(sid,summary={"status":"extracting"})
+    assert client.delete(f"/api/v1/sessions/{sid}").status_code==409
+    assert server._st().store.exists(sid)
+
+
+@pytest.mark.parametrize("field,value",[("action","원문에 없는 조치"),("rollback",["원문에 없는 복구"])])
+def test_source_instruction_change_cannot_be_force_approved(client,field,value):
+    sid=client.post("/api/v1/sessions",json={"case":"pass"}).json()["id"]
+    server._st().store.update_meta(sid,summary={"mode":"llm"})
+    plan=server._st().store.load_json(sid,"plan.json")
+    plan["steps"][4][field]=value
+    assert client.post(f"/api/v1/sessions/{sid}/approve",json={"plan":plan,"force":True}).status_code==409
+    assert not server._st().store.has(sid,"rules.approved.json")

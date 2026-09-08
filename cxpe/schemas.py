@@ -8,9 +8,10 @@
 from __future__ import annotations
 
 from enum import Enum
+import math
 from typing import Any, Literal, Optional
 
-from pydantic import BaseModel, Field, model_validator
+from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 Sample = dict[str, Optional[float]]  # {"t_sec": 12.0, "CH1_STATUS": 1.0, "CHWS_T_SUP": None, ...}
 
@@ -26,6 +27,7 @@ class Op(str, Enum):
 
 
 class Cond(BaseModel):
+    model_config = ConfigDict(allow_inf_nan=False)
     tag: str
     op: Op
     value: Optional[float] = None
@@ -45,7 +47,7 @@ class Cond(BaseModel):
 
     def evaluate(self, v: Optional[float]) -> Optional[bool]:
         """값이 없으면 None(결측). 있으면 bool."""
-        if v is None:
+        if v is None or not math.isfinite(v):
             return None
         if self.op == Op.IN_BAND:
             lo, hi = self.band  # type: ignore[misc]
@@ -75,6 +77,7 @@ class Expected(Cond):
 
 
 class Step(BaseModel):
+    model_config = ConfigDict(allow_inf_nan=False)
     id: str
     title: str
     action: str = ""
@@ -101,7 +104,7 @@ class TestPlan(BaseModel):
     plan_id: str
     title: str
     equipment: list[str] = Field(default_factory=list)
-    steps: list[Step]
+    steps: list[Step] = Field(min_length=1)
     tag_aliases: dict[str, str] = Field(default_factory=dict)  # 논리명 -> 실제 태그
 
     @model_validator(mode="after")
