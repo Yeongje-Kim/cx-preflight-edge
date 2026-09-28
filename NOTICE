@@ -2,7 +2,9 @@ Cx-Preflight Edge
 Copyright 2026 Yeongje Kim
 
 제3자 구성요소:
-  uPlot (web/uplot.min.js, web/uplot.min.css) - MIT License, Leon Sorokin
+  uPlot 1.6.31 (web/uplot.min.js, web/uplot.min.css) - MIT License, Leon Sorokin
+    라이선스 전문: web/uplot.LICENSE
+    원문: https://github.com/leeoniya/uPlot/blob/1.6.31/LICENSE
   Qwen3-4B-Instruct-2507 - Apache-2.0, Alibaba Cloud (보드 측 런타임, 이 저장소에 포함되지 않음)
 
 온디바이스 LLM 런타임(Qualcomm Genie, NPU core 1)은 보드에 별도로 설치되며 이 저장소에
